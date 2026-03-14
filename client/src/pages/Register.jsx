@@ -2,9 +2,16 @@ import React, { useState } from "react";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import Button from "../components/common/Button";
+import { useNavigate } from "react-router-dom";
+import { registerUser, registerHelper } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [role, setRole] = useState("user");
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -13,6 +20,11 @@ const Register = () => {
     password: "",
     category: "",
     village: "",
+    address: "",
+    latitude: "",
+    longitude: "",
+    expertise: "",
+    serviceCharge: "",
   });
 
   const [locationAllowed, setLocationAllowed] = useState(false);
@@ -31,8 +43,13 @@ const Register = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      () => {
+      (position) => {
         setLocationAllowed(true);
+        setFormData((prev) => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }));
         alert("Location permission granted");
       },
       () => {
@@ -42,9 +59,55 @@ const Register = () => {
     );
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    console.log("Register Data:", { role, ...formData, locationAllowed });
+
+    try {
+      setLoading(true);
+
+      let data;
+
+      if (role === "user") {
+        data = await registerUser({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          password: formData.password,
+          address: formData.address,
+          village: formData.village,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+        });
+      } else {
+        data = await registerHelper({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          password: formData.password,
+          category: formData.category,
+          village: formData.village,
+          address: formData.address,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          expertise: formData.expertise,
+          serviceCharge: Number(formData.serviceCharge) || 0,
+        });
+      }
+
+      login(data.token, data.user || data.helper);
+
+      alert(data.message);
+
+      if (role === "helper") {
+        navigate("/helpers");
+      } else {
+        navigate("/home");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,6 +127,7 @@ const Register = () => {
 
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
+              type="button"
               onClick={() => setRole("user")}
               className={`rounded-2xl py-3 font-semibold ${
                 role === "user"
@@ -75,6 +139,7 @@ const Register = () => {
             </button>
 
             <button
+              type="button"
               onClick={() => setRole("helper")}
               className={`rounded-2xl py-3 font-semibold ${
                 role === "helper"
@@ -87,98 +152,96 @@ const Register = () => {
           </div>
 
           <form onSubmit={handleRegister} className="mt-6 space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Enter full name"
-                value={formData.fullName}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-4 outline-none focus:border-blue-500"
-              />
-            </div>
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+            />
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  name="phone"
-                  placeholder="Enter phone number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-4 outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-4 outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Password
-              </label>
               <input
-                type="password"
-                name="password"
-                placeholder="Create password"
-                value={formData.password}
+                type="text"
+                name="phone"
+                placeholder="Phone Number"
+                value={formData.phone}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-4 outline-none focus:border-blue-500"
+                className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+              />
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-4"
               />
             </div>
+
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+            />
+
+            <input
+              type="text"
+              name="village"
+              placeholder="Village / Area"
+              value={formData.village}
+              onChange={handleChange}
+              className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+            />
+
+            <input
+              type="text"
+              name="address"
+              placeholder="Address"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+            />
 
             {role === "helper" && (
               <>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Service Category
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-4 outline-none focus:border-blue-500"
-                  >
-                    <option value="">Select category</option>
-                    <option value="electrician">Electrician</option>
-                    <option value="plumber">Plumber</option>
-                    <option value="road-worker">Road Worker</option>
-                    <option value="cleaner">Cleaner</option>
-                    <option value="technician">Technician</option>
-                  </select>
-                </div>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+                >
+                  <option value="">Select category</option>
+                  <option value="electrician">Electrician</option>
+                  <option value="plumber">Plumber</option>
+                  <option value="road-worker">Road Worker</option>
+                  <option value="cleaner">Cleaner</option>
+                  <option value="technician">Technician</option>
+                  <option value="other">Other</option>
+                </select>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Village / Area
-                  </label>
-                  <input
-                    type="text"
-                    name="village"
-                    placeholder="Enter village or area"
-                    value={formData.village}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-4 outline-none focus:border-blue-500"
-                  />
-                </div>
+                <input
+                  type="text"
+                  name="expertise"
+                  placeholder="Expertise"
+                  value={formData.expertise}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+                />
+
+                <input
+                  type="number"
+                  name="serviceCharge"
+                  placeholder="Approximate Service Charge"
+                  value={formData.serviceCharge}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-4"
+                />
               </>
             )}
 
@@ -201,7 +264,13 @@ const Register = () => {
 
             <Button
               type="submit"
-              text={role === "user" ? "Create User Account" : "Create Helper Account"}
+              text={
+                loading
+                  ? "Please wait..."
+                  : role === "user"
+                  ? "Create User Account"
+                  : "Create Helper Account"
+              }
               className={`text-white text-lg py-4 rounded-2xl ${
                 role === "user" ? "bg-blue-600" : "bg-green-600"
               }`}

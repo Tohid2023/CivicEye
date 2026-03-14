@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import { createRating } from "../services/ratingService";
 
 const Rating = () => {
   const [selectedRating, setSelectedRating] = useState(0);
   const [review, setReview] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (selectedRating === 0) {
@@ -14,14 +15,28 @@ const Rating = () => {
       return;
     }
 
-    console.log("Submitted Rating:", {
-      rating: selectedRating,
-      review,
-    });
+    try {
+      const bookingId = localStorage.getItem("selected_booking_id");
 
-    alert("Thank you for your feedback!");
-    setSelectedRating(0);
-    setReview("");
+      if (!bookingId) {
+        alert("No completed booking found");
+        return;
+      }
+
+      await createRating({
+        bookingId,
+        stars: selectedRating,
+        review,
+      });
+
+      localStorage.getItem("selected_booking_id")
+
+      alert("Thank you for your feedback!");
+      setSelectedRating(0);
+      setReview("");
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to submit rating");
+    }
   };
 
   return (
@@ -32,7 +47,9 @@ const Rating = () => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
             <div className="bg-gradient-to-r from-yellow-400 to-green-500 text-white p-6 sm:p-8">
-              <h1 className="text-3xl sm:text-4xl font-bold">Rate the Helper</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold">
+                Rate the Helper
+              </h1>
               <p className="mt-2 text-yellow-50">
                 Share your experience after service completion
               </p>

@@ -1,82 +1,49 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import HelperList from "../components/helper/HelperList";
-
-const allHelpers = [
-  {
-    id: 1,
-    name: "Ramesh Electrician",
-    category: "Electrician",
-    distance: 2.5,
-    rating: 4.8,
-    charge: 250,
-    available: true,
-    village: "Rampura",
-    phone: "9876543210",
-    reviews: 24,
-    expertise: "Wiring, meter, power faults",
-  },
-  {
-    id: 2,
-    name: "Suresh Plumber",
-    category: "Plumber",
-    distance: 4.2,
-    rating: 4.6,
-    charge: 300,
-    available: true,
-    village: "Lakshmipura",
-    phone: "9876501234",
-    reviews: 19,
-    expertise: "Pipe leakage, tank fitting",
-  },
-  {
-    id: 3,
-    name: "Mahesh Road Worker",
-    category: "Road Worker",
-    distance: 7.5,
-    rating: 4.4,
-    charge: 500,
-    available: true,
-    village: "Navapura",
-    phone: "9823456712",
-    reviews: 11,
-    expertise: "Road patch, mud cleaning",
-  },
-  {
-    id: 4,
-    name: "Kishan Cleaner",
-    category: "Cleaner",
-    distance: 9.1,
-    rating: 4.5,
-    charge: 200,
-    available: false,
-    village: "Ambali",
-    phone: "9898989898",
-    reviews: 16,
-    expertise: "Drainage and cleaning",
-  },
-];
+import { getAllHelpers } from "../services/helperService";
 
 const Helpers = () => {
   const [searchRadius, setSearchRadius] = useState(5);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [helpers, setHelpers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchHelpers = async () => {
+    try {
+      setLoading(true);
+
+      const params = {};
+      if (selectedCategory) {
+        params.category = selectedCategory.toLowerCase();
+      }
+
+      const data = await getAllHelpers(params);
+      setHelpers(data.helpers || []);
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to fetch helpers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHelpers();
+  }, [selectedCategory]);
 
   const filteredHelpers = useMemo(() => {
-    let helpers = allHelpers.filter((helper) => helper.distance <= searchRadius);
+    return helpers.filter((helper) => {
+      const lat = helper.location?.latitude;
+      const lng = helper.location?.longitude;
 
-    if (selectedCategory) {
-      helpers = helpers.filter(
-        (helper) => helper.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
+      if (lat === null || lng === null || lat === undefined || lng === undefined) {
+        return true;
+      }
 
-    return helpers;
-  }, [searchRadius, selectedCategory]);
-
-  const handleExpandSearch = () => {
-    setSearchRadius(10);
-  };
+      return true;
+    });
+  }, [helpers, searchRadius]);
 
   return (
     <>
@@ -121,10 +88,12 @@ const Helpers = () => {
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base outline-none focus:border-blue-500"
               >
                 <option value="">All Categories</option>
-                <option value="Electrician">Electrician</option>
-                <option value="Plumber">Plumber</option>
-                <option value="Road Worker">Road Worker</option>
-                <option value="Cleaner">Cleaner</option>
+                <option value="electrician">Electrician</option>
+                <option value="plumber">Plumber</option>
+                <option value="road-worker">Road Worker</option>
+                <option value="cleaner">Cleaner</option>
+                <option value="technician">Technician</option>
+                <option value="other">Other</option>
               </select>
 
               <button
@@ -135,7 +104,7 @@ const Helpers = () => {
               </button>
 
               <button
-                onClick={handleExpandSearch}
+                onClick={() => setSearchRadius(10)}
                 className="rounded-2xl bg-green-600 text-white py-4 font-semibold"
               >
                 Expand to 10 km
@@ -144,7 +113,13 @@ const Helpers = () => {
           </div>
 
           <div className="mt-8">
-            <HelperList helpers={filteredHelpers} />
+            {loading ? (
+              <div className="bg-white rounded-3xl p-6 text-center shadow-sm">
+                Loading helpers...
+              </div>
+            ) : (
+              <HelperList helpers={filteredHelpers} />
+            )}
           </div>
         </div>
       </section>

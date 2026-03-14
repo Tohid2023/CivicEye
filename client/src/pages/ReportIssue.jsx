@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import { createIssue } from "../services/issueService";
+import { useNavigate } from "react-router-dom";
 
 const ReportIssue = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     category: "",
@@ -68,17 +72,35 @@ const ReportIssue = () => {
         console.log(error);
         setLocationStatus("Location permission denied");
         alert("Unable to detect location");
-      }
+      },
     );
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    console.log("Reported Issue Data:", formData);
+  try {
+    setLoading(true);
+
+    const data = await createIssue({
+      category: formData.category,
+      description: formData.description,
+      image: "",
+      address: formData.address,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+    });
+
+    localStorage.setItem("selected_issue_id", data.issue._id);
 
     alert("Issue submitted successfully");
-  };
+    navigate("/helpers");
+  } catch (error) {
+    alert(error.response?.data?.message || "Failed to submit issue");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
@@ -193,7 +215,7 @@ const ReportIssue = () => {
                 type="submit"
                 className="w-full rounded-2xl bg-green-600 text-white py-4 text-lg font-semibold"
               >
-                Submit Issue
+                {loading ? "Submitting..." : "Submit Issue"}
               </button>
             </form>
           </div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import { createBooking } from "../services/bookingService";
 
 const Booking = () => {
   const location = useLocation();
@@ -33,11 +34,34 @@ const Booking = () => {
     }));
   };
 
-  const handleConfirmBooking = (e) => {
+  const handleConfirmBooking = async (e) => {
     e.preventDefault();
-    console.log("Booking Data:", { helper, ...bookingData });
-    alert("Booking request sent successfully");
-    navigate("/rating");
+
+    try {
+      const selectedIssueId = localStorage.getItem("selected_issue_id");
+
+      if (!selectedIssueId) {
+        alert("Please report an issue first before booking a helper");
+        navigate("/report");
+        return;
+      }
+
+      const data = await createBooking({
+        helperId: helper.id || helper._id,
+        issueId: selectedIssueId,
+        address: bookingData.address,
+        preferredDate: bookingData.date,
+        preferredTime: bookingData.time,
+        note: bookingData.note,
+      });
+
+      localStorage.setItem("selected_booking_id", data.booking._id);
+
+      alert("Booking request sent successfully");
+      navigate("/rating");
+    } catch (error) {
+      alert(error.response?.data?.message || "Booking failed");
+    }
   };
 
   return (
@@ -48,7 +72,9 @@ const Booking = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
             <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white p-6 sm:p-8">
-              <h1 className="text-3xl sm:text-4xl font-bold">Confirm Booking</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold">
+                Confirm Booking
+              </h1>
               <p className="mt-2 text-green-50">
                 Check helper details and confirm your service request
               </p>
@@ -56,7 +82,9 @@ const Booking = () => {
 
             <div className="p-6 sm:p-8">
               <div className="bg-slate-50 rounded-2xl p-5">
-                <h2 className="text-2xl font-bold text-slate-900">{helper.name}</h2>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {helper.name}
+                </h2>
                 <p className="mt-1 text-slate-600">{helper.category}</p>
 
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">

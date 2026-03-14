@@ -22,3 +22,39 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+client/.env
+server/.env
+
+# Build folders
+dist/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Mac files
+.DS_Store
+
+# Coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
