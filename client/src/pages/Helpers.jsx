@@ -10,10 +10,10 @@ const Helpers = () => {
   const [helpers, setHelpers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const currentUser = JSON.parse(localStorage.getItem("civiceye_user"));
+  const currentUser = JSON.parse(localStorage.getItem("civiceye_user")) || {};
 
-  const userLatitude = currentUser?.location?.latitude || null;
-  const userLongitude = currentUser?.location?.longitude || null;
+  const userLatitude = currentUser?.location?.latitude ?? null;
+  const userLongitude = currentUser?.location?.longitude ?? null;
 
   const fetchHelpers = async (radius) => {
     try {
@@ -28,7 +28,7 @@ const Helpers = () => {
         params.category = selectedCategory;
       }
 
-      if (userLatitude && userLongitude) {
+      if (userLatitude !== null && userLongitude !== null) {
         params.latitude = userLatitude;
         params.longitude = userLongitude;
       }
@@ -72,7 +72,9 @@ const Helpers = () => {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 rounded-2xl p-4">
                 <p className="text-sm text-slate-600">Current Search Radius</p>
-                <p className="text-xl font-bold text-blue-700">{searchRadius} km</p>
+                <p className="text-xl font-bold text-blue-700">
+                  {searchRadius} km
+                </p>
               </div>
 
               <div className="bg-green-50 rounded-2xl p-4">

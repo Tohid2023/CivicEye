@@ -71,7 +71,7 @@ const ReportIssue = () => {
         console.log(error);
         setLocationStatus("Location permission denied");
         alert("Unable to detect location");
-      }
+      },
     );
   };
 
@@ -93,7 +93,6 @@ const ReportIssue = () => {
       }
 
       const data = await createIssue(issueFormData);
-
       localStorage.setItem("selected_issue_id", data.issue._id);
 
       alert("Issue submitted successfully");

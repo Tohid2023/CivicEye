@@ -8,16 +8,15 @@ const HelperProfile = () => {
   const navigate = useNavigate();
 
   const helper = location.state || {
-    id: 1,
-    name: "Ramesh Electrician",
-    category: "Electrician",
+    fullName: "Ramesh Electrician",
+    category: "electrician",
     distance: 2.5,
-    rating: 4.8,
-    charge: 250,
-    available: true,
+    averageRating: 4.8,
+    serviceCharge: 250,
+    availability: "available",
     village: "Rampura",
     phone: "9876543210",
-    reviews: 24,
+    totalReviews: 24,
     expertise: "Wiring, meter, power faults",
   };
 
@@ -39,7 +38,7 @@ const HelperProfile = () => {
                     👷
                   </div>
                   <h1 className="mt-4 text-3xl sm:text-4xl font-bold">
-                    {helper.name}
+                    {helper.fullName}
                   </h1>
                   <p className="mt-2 text-blue-50 text-lg">{helper.category}</p>
                 </div>
@@ -84,7 +83,7 @@ const HelperProfile = () => {
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Approximate Charge</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    ₹{helper.charge}
+                    ₹₹{helper.serviceCharge}
                   </h3>
                 </div>
 
@@ -98,7 +97,7 @@ const HelperProfile = () => {
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Reviews</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    {helper.reviews} Reviews
+                    {helper.totalReviews} Reviews
                   </h3>
                 </div>
               </div>

@@ -17,9 +17,11 @@ const HelperCard = ({ helper }) => {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-xl font-bold text-slate-900">
-            {helper.fullName || helper.name || "Helper"}
+            {helper.fullName || "Helper"}
           </h3>
-          <p className="text-sm text-slate-600 mt-1">{helper.category}</p>
+          <p className="text-sm text-slate-600 mt-1">
+            {helper.category || "Service"}
+          </p>
         </div>
 
         <span
@@ -39,21 +41,23 @@ const HelperCard = ({ helper }) => {
         <div className="bg-slate-50 rounded-2xl p-3">
           <p className="text-xs text-slate-500">Distance</p>
           <p className="text-base font-semibold text-slate-800">
-            {helper.distance ? `${helper.distance} km` : "N/A"}
+            {helper.distance !== null && helper.distance !== undefined
+              ? `${helper.distance} km`
+              : "N/A"}
           </p>
         </div>
 
         <div className="bg-slate-50 rounded-2xl p-3">
           <p className="text-xs text-slate-500">Rating</p>
           <p className="text-base font-semibold text-slate-800">
-            ⭐ {helper.averageRating || helper.rating || 0}
+            ⭐ {helper.averageRating ?? 0}
           </p>
         </div>
 
         <div className="bg-slate-50 rounded-2xl p-3 col-span-2">
           <p className="text-xs text-slate-500">Approximate Charge</p>
           <p className="text-base font-semibold text-slate-800">
-            ₹{helper.serviceCharge || helper.charge || 0}
+            ₹{helper.serviceCharge ?? 0}
           </p>
         </div>
       </div>

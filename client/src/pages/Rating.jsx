@@ -29,8 +29,6 @@ const Rating = () => {
         review,
       });
 
-      localStorage.getItem("selected_booking_id")
-
       alert("Thank you for your feedback!");
       setSelectedRating(0);
       setReview("");

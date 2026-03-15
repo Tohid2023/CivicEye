@@ -9,13 +9,13 @@ const Booking = () => {
   const navigate = useNavigate();
 
   const helper = location.state || {
-    id: 1,
-    name: "Ramesh Electrician",
-    category: "Electrician",
+    _id: "1",
+    fullName: "Ramesh Electrician",
+    category: "electrician",
     distance: 2.5,
-    rating: 4.8,
-    charge: 250,
-    available: true,
+    averageRating: 4.8,
+    serviceCharge: 250,
+    availability: "available",
     village: "Rampura",
     phone: "9876543210",
   };
@@ -35,34 +35,34 @@ const Booking = () => {
   };
 
   const handleConfirmBooking = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const selectedIssueId = localStorage.getItem("selected_issue_id");
+  try {
+    const selectedIssueId = localStorage.getItem("selected_issue_id");
 
-      if (!selectedIssueId) {
-        alert("Please report an issue first before booking a helper");
-        navigate("/report");
-        return;
-      }
-
-      const data = await createBooking({
-        helperId: helper.id || helper._id,
-        issueId: selectedIssueId,
-        address: bookingData.address,
-        preferredDate: bookingData.date,
-        preferredTime: bookingData.time,
-        note: bookingData.note,
-      });
-
-      localStorage.setItem("selected_booking_id", data.booking._id);
-
-      alert("Booking request sent successfully");
-      navigate("/rating");
-    } catch (error) {
-      alert(error.response?.data?.message || "Booking failed");
+    if (!selectedIssueId) {
+      alert("Please report an issue first before booking a helper");
+      navigate("/report");
+      return;
     }
-  };
+
+    const data = await createBooking({
+      helperId: helper._id || helper.id,
+      issueId: selectedIssueId,
+      address: bookingData.address,
+      preferredDate: bookingData.date,
+      note: bookingData.note,
+      preferredTime: bookingData.time,
+    });
+
+    localStorage.setItem("selected_booking_id", data.booking._id);
+
+    alert("Booking request sent successfully");
+    navigate("/rating");
+  } catch (error) {
+    alert(error.response?.data?.message || "Booking failed");
+  }
+};
 
   return (
     <>
@@ -83,7 +83,7 @@ const Booking = () => {
             <div className="p-6 sm:p-8">
               <div className="bg-slate-50 rounded-2xl p-5">
                 <h2 className="text-2xl font-bold text-slate-900">
-                  {helper.name}
+                  {helper.fullName}
                 </h2>
                 <p className="mt-1 text-slate-600">{helper.category}</p>
 
@@ -91,21 +91,21 @@ const Booking = () => {
                   <div className="bg-white rounded-2xl p-4 border border-slate-200">
                     <p className="text-sm text-slate-500">Distance</p>
                     <p className="mt-1 font-semibold text-slate-800">
-                      {helper.distance} km
+                      {helper.distance ? `${helper.distance} km` : "N/A"}
                     </p>
                   </div>
 
                   <div className="bg-white rounded-2xl p-4 border border-slate-200">
                     <p className="text-sm text-slate-500">Rating</p>
                     <p className="mt-1 font-semibold text-slate-800">
-                      ⭐ {helper.rating}
+                      ⭐ {helper.averageRating || 0}
                     </p>
                   </div>
 
                   <div className="bg-white rounded-2xl p-4 border border-slate-200">
                     <p className="text-sm text-slate-500">Charge</p>
                     <p className="mt-1 font-semibold text-slate-800">
-                      ₹{helper.charge}
+                      ₹ {helper.serviceCharge || 0}
                     </p>
                   </div>
                 </div>

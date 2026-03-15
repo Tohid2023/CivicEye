@@ -65,6 +65,7 @@ const registerUser = async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
+        location: user.location,
       },
     });
   } catch (error) {
@@ -96,7 +97,8 @@ const registerHelper = async (req, res) => {
     if (!fullName || !phone || !password || !category || !village) {
       return res.status(400).json({
         success: false,
-        message: "Full name, phone, password, category, and village are required",
+        message:
+          "Full name, phone, password, category, and village are required",
       });
     }
 
@@ -145,6 +147,10 @@ const registerHelper = async (req, res) => {
         email: helper.email,
         category: helper.category,
         role: helper.role,
+        location: helper.location,
+        serviceCharge: helper.serviceCharge,
+        averageRating: helper.averageRating,
+        availability: helper.availability,
       },
     });
   } catch (error) {
@@ -221,6 +227,10 @@ const loginAccount = async (req, res) => {
         email: account.email,
         role: account.role,
         category: account.category || null,
+        location: account.location || null,
+        serviceCharge: account.serviceCharge || 0,
+        averageRating: account.averageRating || 0,
+        availability: account.availability || null,
       },
     });
   } catch (error) {
