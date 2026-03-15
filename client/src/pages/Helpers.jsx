@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import HelperList from "../components/helper/HelperList";
@@ -10,13 +10,27 @@ const Helpers = () => {
   const [helpers, setHelpers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchHelpers = async () => {
+  const currentUser = JSON.parse(localStorage.getItem("civiceye_user"));
+
+  const userLatitude = currentUser?.location?.latitude || null;
+  const userLongitude = currentUser?.location?.longitude || null;
+
+  const fetchHelpers = async (radius) => {
     try {
       setLoading(true);
 
-      const params = {};
+      const params = {
+        availability: "available",
+        radius,
+      };
+
       if (selectedCategory) {
-        params.category = selectedCategory.toLowerCase();
+        params.category = selectedCategory;
+      }
+
+      if (userLatitude && userLongitude) {
+        params.latitude = userLatitude;
+        params.longitude = userLongitude;
       }
 
       const data = await getAllHelpers(params);
@@ -29,21 +43,16 @@ const Helpers = () => {
   };
 
   useEffect(() => {
-    fetchHelpers();
-  }, [selectedCategory]);
+    fetchHelpers(searchRadius);
+  }, [searchRadius, selectedCategory]);
 
-  const filteredHelpers = useMemo(() => {
-    return helpers.filter((helper) => {
-      const lat = helper.location?.latitude;
-      const lng = helper.location?.longitude;
+  const handleSearch5Km = () => {
+    setSearchRadius(5);
+  };
 
-      if (lat === null || lng === null || lat === undefined || lng === undefined) {
-        return true;
-      }
-
-      return true;
-    });
-  }, [helpers, searchRadius]);
+  const handleExpandSearch = () => {
+    setSearchRadius(10);
+  };
 
   return (
     <>
@@ -56,8 +65,8 @@ const Helpers = () => {
               Nearby Helpers
             </h1>
             <p className="mt-2 text-slate-600">
-              We first search helpers within <strong>5 km</strong>. If none are
-              available, you can expand search to <strong>10 km</strong>.
+              CivicEye first searches helpers within <strong>5 km</strong>. If
+              none are found, expand to <strong>10 km</strong>.
             </p>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -69,7 +78,7 @@ const Helpers = () => {
               <div className="bg-green-50 rounded-2xl p-4">
                 <p className="text-sm text-slate-600">Helpers Found</p>
                 <p className="text-xl font-bold text-green-700">
-                  {filteredHelpers.length}
+                  {helpers.length}
                 </p>
               </div>
 
@@ -97,14 +106,14 @@ const Helpers = () => {
               </select>
 
               <button
-                onClick={() => setSearchRadius(5)}
+                onClick={handleSearch5Km}
                 className="rounded-2xl bg-blue-600 text-white py-4 font-semibold"
               >
                 Search in 5 km
               </button>
 
               <button
-                onClick={() => setSearchRadius(10)}
+                onClick={handleExpandSearch}
                 className="rounded-2xl bg-green-600 text-white py-4 font-semibold"
               >
                 Expand to 10 km
@@ -117,8 +126,17 @@ const Helpers = () => {
               <div className="bg-white rounded-3xl p-6 text-center shadow-sm">
                 Loading helpers...
               </div>
+            ) : helpers.length > 0 ? (
+              <HelperList helpers={helpers} />
             ) : (
-              <HelperList helpers={filteredHelpers} />
+              <div className="bg-white rounded-3xl p-6 text-center shadow-sm">
+                <p className="text-lg font-semibold text-slate-800">
+                  No helpers found within {searchRadius} km
+                </p>
+                <p className="mt-2 text-slate-600">
+                  Try another category or expand the search area.
+                </p>
+              </div>
             )}
           </div>
         </div>

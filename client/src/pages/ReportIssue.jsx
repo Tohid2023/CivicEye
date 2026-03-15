@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { createIssue } from "../services/issueService";
-import { useNavigate } from "react-router-dom";
 
 const ReportIssue = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     category: "",
@@ -20,6 +18,7 @@ const ReportIssue = () => {
   });
 
   const [locationStatus, setLocationStatus] = useState("Not detected");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -64,7 +63,7 @@ const ReportIssue = () => {
           ...prev,
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          address: "Location detected successfully",
+          address: prev.address || "Location detected successfully",
         }));
         setLocationStatus("Location detected");
       },
@@ -72,35 +71,39 @@ const ReportIssue = () => {
         console.log(error);
         setLocationStatus("Location permission denied");
         alert("Unable to detect location");
-      },
+      }
     );
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const data = await createIssue({
-      category: formData.category,
-      description: formData.description,
-      image: "",
-      address: formData.address,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
-    });
+      const issueFormData = new FormData();
+      issueFormData.append("category", formData.category);
+      issueFormData.append("description", formData.description);
+      issueFormData.append("address", formData.address);
+      issueFormData.append("latitude", formData.latitude);
+      issueFormData.append("longitude", formData.longitude);
 
-    localStorage.setItem("selected_issue_id", data.issue._id);
+      if (formData.image) {
+        issueFormData.append("image", formData.image);
+      }
 
-    alert("Issue submitted successfully");
-    navigate("/helpers");
-  } catch (error) {
-    alert(error.response?.data?.message || "Failed to submit issue");
-  } finally {
-    setLoading(false);
-  }
-};
+      const data = await createIssue(issueFormData);
+
+      localStorage.setItem("selected_issue_id", data.issue._id);
+
+      alert("Issue submitted successfully");
+      navigate("/helpers");
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to submit issue");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -146,7 +149,7 @@ const ReportIssue = () => {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Write your problem here"
+                  placeholder="Example: Electric wire problem near my house"
                   className="w-full h-32 rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base outline-none focus:border-blue-500"
                 />
               </div>

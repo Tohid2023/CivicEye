@@ -1,13 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { loginAdmin } from "../../services/adminService";
+import { useAuth } from "../../context/AuthContext";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -16,12 +21,23 @@ const AdminLogin = () => {
     }));
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    console.log("Admin Login:", formData);
+    try {
+      setLoading(true);
 
-    navigate("/admin-dashboard");
+      const data = await loginAdmin(formData);
+
+      login(data.token, data.admin);
+
+      alert(data.message);
+      navigate("/admin-dashboard");
+    } catch (error) {
+      alert(error.response?.data?.message || "Admin login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,7 +83,7 @@ const AdminLogin = () => {
             type="submit"
             className="w-full rounded-2xl bg-slate-900 text-white py-4 text-lg font-semibold"
           >
-            Login as Admin
+            {loading ? "Logging in..." : "Login as Admin"}
           </button>
         </form>
       </div>

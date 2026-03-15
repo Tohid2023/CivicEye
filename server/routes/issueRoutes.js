@@ -8,11 +8,12 @@ const {
 } = require("../controllers/issueController");
 
 const { protect, isUser } = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
 // User routes
-router.post("/create", protect, isUser, createIssue);
+router.post("/create", protect, isUser, upload.single("image"), createIssue);
 router.get("/my-issues", protect, isUser, getMyIssues);
 
 // Protected routes for now

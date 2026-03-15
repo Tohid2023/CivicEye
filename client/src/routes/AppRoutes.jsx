@@ -13,6 +13,7 @@ import AdminLogin from "../pages/admin/AdminLogin";
 import Dashboard from "../pages/admin/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import HelperRequests from "../pages/HelperRequests";
 
 const AppRoutes = () => {
   return (
@@ -105,6 +106,15 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/helper-requests"
+        element={
+          <ProtectedRoute allowedRoles={["helper"]}>
+            <HelperRequests />
           </ProtectedRoute>
         }
       />

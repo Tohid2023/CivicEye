@@ -55,6 +55,20 @@ const Navbar = () => {
             </>
           )}
 
+          {isAuthenticated && authUser?.role === "helper" && (
+            <>
+              <Link to="/helper-requests" className="hover:text-blue-600">
+                Requests
+              </Link>
+              <Link to="/helpers" className="hover:text-blue-600">
+                Helpers
+              </Link>
+              <Link to="/helper-profile" className="hover:text-blue-600">
+                Profile
+              </Link>
+            </>
+          )}
+
           {isAuthenticated && (
             <>
               <span className="text-slate-500">

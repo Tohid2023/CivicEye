@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Helper = require("../models/Helper");
+const Admin = require("../models/Admin");
 
 const protect = async (req, res, next) => {
   try {
@@ -44,6 +45,17 @@ const protect = async (req, res, next) => {
       }
 
       req.user = helper;
+    } else if (decoded.role === "admin") {
+      const admin = await Admin.findById(decoded.id).select("-password");
+
+      if (!admin) {
+        return res.status(401).json({
+          success: false,
+          message: "Admin not found",
+        });
+      }
+
+      req.user = admin;
     } else {
       return res.status(401).json({
         success: false,
@@ -84,8 +96,20 @@ const isHelper = (req, res, next) => {
   });
 };
 
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: "Access denied: admin only",
+  });
+};
+
 module.exports = {
   protect,
   isUser,
   isHelper,
+  isAdmin,
 };

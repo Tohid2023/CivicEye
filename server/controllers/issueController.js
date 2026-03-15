@@ -4,7 +4,7 @@ const Helper = require("../models/Helper");
 // Create Issue
 const createIssue = async (req, res) => {
   try {
-    const { category, description, image, address, latitude, longitude } = req.body;
+    const { category, description, address, latitude, longitude } = req.body;
 
     if (!category || !description) {
       return res.status(400).json({
@@ -13,11 +13,17 @@ const createIssue = async (req, res) => {
       });
     }
 
+    let imagePath = "";
+
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+    }
+
     const issue = await Issue.create({
       user: req.user._id,
       category,
       description,
-      image: image || "",
+      image: imagePath,
       address: address || "",
       location: {
         latitude: latitude || null,

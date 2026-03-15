@@ -1,9 +1,11 @@
 const Helper = require("../models/Helper");
+const calculateDistanceInKm = require("../utils/distanceCalculator");
 
-// Get all helpers
+// Get all helpers with optional matching by location and radius
 const getAllHelpers = async (req, res) => {
   try {
-    const { category, availability, village } = req.query;
+    const { category, availability, village, latitude, longitude, radius } =
+      req.query;
 
     let filter = {};
 
@@ -19,14 +21,52 @@ const getAllHelpers = async (req, res) => {
       filter.village = { $regex: village, $options: "i" };
     }
 
-    const helpers = await Helper.find(filter)
-      .select("-password")
-      .sort({ createdAt: -1 });
+    const helpers = await Helper.find(filter).select("-password");
+
+    let result = helpers.map((helper) => {
+      let distance = null;
+
+      const helperLat = helper.location?.latitude;
+      const helperLng = helper.location?.longitude;
+
+      if (
+        latitude &&
+        longitude &&
+        helperLat !== null &&
+        helperLng !== null &&
+        helperLat !== undefined &&
+        helperLng !== undefined
+      ) {
+        distance = calculateDistanceInKm(
+          Number(latitude),
+          Number(longitude),
+          Number(helperLat),
+          Number(helperLng)
+        );
+      }
+
+      return {
+        ...helper.toObject(),
+        distance: distance !== null ? Number(distance.toFixed(2)) : null,
+      };
+    });
+
+    if (radius) {
+      result = result.filter(
+        (helper) => helper.distance !== null && helper.distance <= Number(radius)
+      );
+    }
+
+    result.sort((a, b) => {
+      if (a.distance === null) return 1;
+      if (b.distance === null) return -1;
+      return a.distance - b.distance;
+    });
 
     return res.status(200).json({
       success: true,
-      count: helpers.length,
-      helpers,
+      count: result.length,
+      helpers: result,
     });
   } catch (error) {
     console.error("Get All Helpers Error:", error.message);
