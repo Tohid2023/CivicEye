@@ -106,7 +106,7 @@ const HelperRequests = () => {
 
                       <span
                         className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusClasses(
-                          booking.status
+                          booking.status,
                         )}`}
                       >
                         {booking.status}
@@ -114,15 +114,35 @@ const HelperRequests = () => {
                     </div>
 
                     <div className="mt-4 space-y-3">
-                      <div className="bg-slate-50 rounded-2xl p-3">
-                        <p className="text-xs text-slate-500">Issue Description</p>
-                        <p className="text-sm font-medium text-slate-800 mt-1">
-                          {booking.issue?.description || "No description"}
-                        </p>
-                      </div>
+                      {booking.issue?.image ? (
+                        <div className="bg-slate-50 rounded-2xl p-3">
+                          <p className="text-xs text-slate-500 mb-2">
+                            Uploaded Issue Image
+                          </p>
+                          <img
+                            src={`http://localhost:8080${booking.issue.image}`}
+                            alt="Issue"
+                            className="w-full h-48 object-cover rounded-xl border border-slate-200"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="bg-slate-50 rounded-2xl p-3">
+                          <p className="text-xs text-slate-500">
+                            Uploaded Issue Image
+                          </p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">
+                            No image uploaded
+                          </p>
+                        </div>
+                      )}
 
                       <div className="bg-slate-50 rounded-2xl p-3">
-                        <p className="text-xs text-slate-500">Service Address</p>
+                        <p className="text-xs text-slate-500">
+                          Service Address
+                        </p>
                         <p className="text-sm font-medium text-slate-800 mt-1">
                           {booking.address || "No address"}
                         </p>
@@ -130,14 +150,18 @@ const HelperRequests = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-slate-50 rounded-2xl p-3">
-                          <p className="text-xs text-slate-500">Preferred Date</p>
+                          <p className="text-xs text-slate-500">
+                            Preferred Date
+                          </p>
                           <p className="text-sm font-medium text-slate-800 mt-1">
                             {booking.preferredDate || "N/A"}
                           </p>
                         </div>
 
                         <div className="bg-slate-50 rounded-2xl p-3">
-                          <p className="text-xs text-slate-500">Preferred Time</p>
+                          <p className="text-xs text-slate-500">
+                            Preferred Time
+                          </p>
                           <p className="text-sm font-medium text-slate-800 mt-1">
                             {booking.preferredTime || "N/A"}
                           </p>
@@ -200,7 +224,9 @@ const HelperRequests = () => {
                         }
                         className="rounded-2xl bg-blue-600 text-white py-3 font-semibold disabled:opacity-50"
                       >
-                        {updatingId === booking._id ? "Updating..." : "Complete"}
+                        {updatingId === booking._id
+                          ? "Updating..."
+                          : "Complete"}
                       </button>
                     </div>
                   </div>

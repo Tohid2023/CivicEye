@@ -10,7 +10,8 @@ const Helpers = () => {
   const [helpers, setHelpers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const currentUser = JSON.parse(localStorage.getItem("civiceye_user")) || {};
+  const currentUser =
+    JSON.parse(localStorage.getItem("civiceye_user")) || {};
 
   const userLatitude = currentUser?.location?.latitude ?? null;
   const userLongitude = currentUser?.location?.longitude ?? null;
@@ -21,16 +22,17 @@ const Helpers = () => {
 
       const params = {
         availability: "available",
-        radius,
       };
 
       if (selectedCategory) {
         params.category = selectedCategory;
       }
 
+      // only send radius when user location exists
       if (userLatitude !== null && userLongitude !== null) {
         params.latitude = userLatitude;
         params.longitude = userLongitude;
+        params.radius = radius;
       }
 
       const data = await getAllHelpers(params);
@@ -45,14 +47,6 @@ const Helpers = () => {
   useEffect(() => {
     fetchHelpers(searchRadius);
   }, [searchRadius, selectedCategory]);
-
-  const handleSearch5Km = () => {
-    setSearchRadius(5);
-  };
-
-  const handleExpandSearch = () => {
-    setSearchRadius(10);
-  };
 
   return (
     <>
@@ -72,9 +66,7 @@ const Helpers = () => {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 rounded-2xl p-4">
                 <p className="text-sm text-slate-600">Current Search Radius</p>
-                <p className="text-xl font-bold text-blue-700">
-                  {searchRadius} km
-                </p>
+                <p className="text-xl font-bold text-blue-700">{searchRadius} km</p>
               </div>
 
               <div className="bg-green-50 rounded-2xl p-4">
@@ -87,7 +79,11 @@ const Helpers = () => {
               <div className="bg-yellow-50 rounded-2xl p-4">
                 <p className="text-sm text-slate-600">Search Type</p>
                 <p className="text-xl font-bold text-yellow-700">
-                  {searchRadius === 5 ? "Nearby First" : "Expanded Search"}
+                  {userLatitude !== null && userLongitude !== null
+                    ? searchRadius === 5
+                      ? "Nearby First"
+                      : "Expanded Search"
+                    : "Location Fallback"}
                 </p>
               </div>
             </div>
@@ -108,14 +104,14 @@ const Helpers = () => {
               </select>
 
               <button
-                onClick={handleSearch5Km}
+                onClick={() => setSearchRadius(5)}
                 className="rounded-2xl bg-blue-600 text-white py-4 font-semibold"
               >
                 Search in 5 km
               </button>
 
               <button
-                onClick={handleExpandSearch}
+                onClick={() => setSearchRadius(10)}
                 className="rounded-2xl bg-green-600 text-white py-4 font-semibold"
               >
                 Expand to 10 km
@@ -133,7 +129,7 @@ const Helpers = () => {
             ) : (
               <div className="bg-white rounded-3xl p-6 text-center shadow-sm">
                 <p className="text-lg font-semibold text-slate-800">
-                  No helpers found within {searchRadius} km
+                  No helpers found
                 </p>
                 <p className="mt-2 text-slate-600">
                   Try another category or expand the search area.

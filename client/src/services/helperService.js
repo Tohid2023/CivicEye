@@ -9,3 +9,8 @@ export const getHelperById = async (id) => {
   const response = await api.get(`/helpers/${id}`);
   return response.data;
 };
+
+export const getMyHelperProfile = async () => {
+  const response = await api.get("/helpers/profile/me");
+  return response.data;
+};

@@ -8,7 +8,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -18,12 +18,24 @@ const Navbar = () => {
           CivicEye
         </Link>
 
-        <div className="hidden md:flex gap-6 text-sm font-medium text-slate-700 items-center">
+        <div className="flex gap-6 text-sm font-medium text-slate-700 items-center">
           {!isAuthenticated && (
             <>
-              <Link to="/">Home</Link>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
+              <Link to="/" className="hover:text-blue-600">
+                Home
+              </Link>
+              <Link to="/login" className="hover:text-blue-600">
+                Login
+              </Link>
+              <Link to="/register" className="hover:text-blue-600">
+                Register
+              </Link>
+              <Link
+                to="/admin-login"
+                className="text-xs text-slate-400 hover:text-slate-600"
+              >
+                Admin
+              </Link>
             </>
           )}
 
@@ -35,23 +47,24 @@ const Navbar = () => {
               <Link to="/report" className="hover:text-blue-600">
                 Report
               </Link>
+              <Link to="/my-issues" className="hover:text-blue-600">
+                My Issues
+              </Link>
               <Link to="/helpers" className="hover:text-blue-600">
                 Helpers
               </Link>
               <Link to="/rating" className="hover:text-blue-600">
                 Rating
               </Link>
-            </>
-          )}
-
-          {isAuthenticated && authUser?.role === "helper" && (
-            <>
-              <Link to="/helpers" className="hover:text-blue-600">
-                Helpers
-              </Link>
-              <Link to="/helper-profile" className="hover:text-blue-600">
-                Profile
-              </Link>
+              <span className="text-slate-500">
+                {authUser?.fullName || "User"}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="rounded-xl bg-red-500 px-4 py-2 text-white"
+              >
+                Logout
+              </button>
             </>
           )}
 
@@ -66,13 +79,25 @@ const Navbar = () => {
               <Link to="/helper-profile" className="hover:text-blue-600">
                 Profile
               </Link>
+              <span className="text-slate-500">
+                {authUser?.fullName || "Helper"}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="rounded-xl bg-red-500 px-4 py-2 text-white"
+              >
+                Logout
+              </button>
             </>
           )}
 
-          {isAuthenticated && (
+          {isAuthenticated && authUser?.role === "admin" && (
             <>
+              <Link to="/admin-dashboard" className="hover:text-blue-600">
+                Dashboard
+              </Link>
               <span className="text-slate-500">
-                {authUser?.fullName || "User"}
+                {authUser?.fullName || "Admin"}
               </span>
               <button
                 onClick={handleLogout}

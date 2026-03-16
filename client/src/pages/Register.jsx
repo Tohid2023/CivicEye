@@ -45,17 +45,33 @@ const Register = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocationAllowed(true);
+
         setFormData((prev) => ({
           ...prev,
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         }));
+
         alert("Location permission granted");
       },
-      () => {
+      (error) => {
+        console.log(error);
+
         setLocationAllowed(false);
-        alert("Location permission denied");
-      }
+
+        setFormData((prev) => ({
+          ...prev,
+          latitude: 22.1347,
+          longitude: 73.4167,
+        }));
+
+        alert("Location permission denied. Using default location.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
     );
   };
 
@@ -268,8 +284,8 @@ const Register = () => {
                 loading
                   ? "Please wait..."
                   : role === "user"
-                  ? "Create User Account"
-                  : "Create Helper Account"
+                    ? "Create User Account"
+                    : "Create Helper Account"
               }
               className={`text-white text-lg py-4 rounded-2xl ${
                 role === "user" ? "bg-blue-600" : "bg-green-600"

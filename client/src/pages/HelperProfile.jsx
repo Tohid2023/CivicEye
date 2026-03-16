@@ -1,28 +1,95 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import { getMyHelperProfile } from "../services/helperService";
 
 const HelperProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const helper = location.state || {
-    fullName: "Ramesh Electrician",
-    category: "electrician",
-    distance: 2.5,
-    averageRating: 4.8,
-    serviceCharge: 250,
-    availability: "available",
-    village: "Rampura",
-    phone: "9876543210",
-    totalReviews: 24,
-    expertise: "Wiring, meter, power faults",
-  };
+  const authUser = JSON.parse(localStorage.getItem("civiceye_user")) || null;
+
+  const [helper, setHelper] = useState(location.state || null);
+  const [loading, setLoading] = useState(!location.state);
+
+  useEffect(() => {
+    const fetchOwnHelperProfile = async () => {
+      try {
+        // If state exists, user opened a public helper profile from helper list
+        if (location.state) {
+          setHelper(location.state);
+          setLoading(false);
+          return;
+        }
+
+        // If no state and logged-in account is helper, fetch own profile
+        if (authUser?.role === "helper") {
+          const data = await getMyHelperProfile();
+          setHelper(data.helper);
+        }
+      } catch (error) {
+        alert(error.response?.data?.message || "Failed to load helper profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOwnHelperProfile();
+  }, [location.state]);
 
   const handleBook = () => {
+    if (!helper) return;
     navigate("/booking", { state: helper });
   };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <section className="min-h-screen bg-slate-50 px-4 py-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-3xl p-8 text-center shadow-sm">
+              Loading helper profile...
+            </div>
+          </div>
+        </section>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!helper) {
+    return (
+      <>
+        <Navbar />
+        <section className="min-h-screen bg-slate-50 px-4 py-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-3xl p-8 text-center shadow-sm">
+              Helper profile not found.
+            </div>
+          </div>
+        </section>
+        <Footer />
+      </>
+    );
+  }
+
+  const displayName = helper.fullName || "Helper";
+  const displayCategory = helper.category || "Service";
+  const displayVillage = helper.village || "N/A";
+  const displayDistance =
+    helper.distance !== null && helper.distance !== undefined
+      ? `${helper.distance} km away`
+      : authUser?.role === "helper"
+      ? "Your service area"
+      : "N/A";
+  const displayPhone = helper.phone || "N/A";
+  const displayCharge = helper.serviceCharge ?? 0;
+  const displayRating = helper.averageRating ?? 0;
+  const displayReviews = helper.totalReviews ?? 0;
+  const displayExpertise = helper.expertise || "No expertise added";
+  const isAvailable = helper.availability === "available";
 
   return (
     <>
@@ -38,20 +105,20 @@ const HelperProfile = () => {
                     👷
                   </div>
                   <h1 className="mt-4 text-3xl sm:text-4xl font-bold">
-                    {helper.fullName}
+                    {displayName}
                   </h1>
-                  <p className="mt-2 text-blue-50 text-lg">{helper.category}</p>
+                  <p className="mt-2 text-blue-50 text-lg">{displayCategory}</p>
                 </div>
 
                 <div>
                   <span
                     className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
-                      helper.available
+                      isAvailable
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
                     }`}
                   >
-                    {helper.available ? "Available Now" : "Currently Busy"}
+                    {isAvailable ? "Available Now" : "Currently Busy"}
                   </span>
                 </div>
               </div>
@@ -62,42 +129,42 @@ const HelperProfile = () => {
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Location</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    {helper.village}
+                    {displayVillage}
                   </h3>
                 </div>
 
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Distance</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    {helper.distance} km away
+                    {displayDistance}
                   </h3>
                 </div>
 
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Phone Number</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    {helper.phone}
+                    {displayPhone}
                   </h3>
                 </div>
 
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Approximate Charge</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    ₹₹{helper.serviceCharge}
+                    ₹{displayCharge}
                   </h3>
                 </div>
 
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Rating</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    ⭐ {helper.rating}
+                    ⭐ {displayRating}
                   </h3>
                 </div>
 
                 <div className="bg-slate-50 rounded-2xl p-5">
                   <p className="text-sm text-slate-500">Reviews</p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-800">
-                    {helper.totalReviews} Reviews
+                    {displayReviews} Reviews
                   </h3>
                 </div>
               </div>
@@ -105,7 +172,7 @@ const HelperProfile = () => {
               <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-5">
                 <p className="text-sm text-slate-500">Service Expertise</p>
                 <h3 className="mt-2 text-lg font-semibold text-slate-800">
-                  {helper.expertise}
+                  {displayExpertise}
                 </h3>
               </div>
 
@@ -118,18 +185,20 @@ const HelperProfile = () => {
                 </p>
               </div>
 
-              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button className="w-full rounded-2xl bg-blue-600 text-white py-4 text-lg font-semibold">
-                  Contact Helper
-                </button>
+              {authUser?.role !== "helper" && (
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button className="w-full rounded-2xl bg-blue-600 text-white py-4 text-lg font-semibold">
+                    Contact Helper
+                  </button>
 
-                <button
-                  onClick={handleBook}
-                  className="w-full rounded-2xl bg-green-600 text-white py-4 text-lg font-semibold"
-                >
-                  Book This Helper
-                </button>
-              </div>
+                  <button
+                    onClick={handleBook}
+                    className="w-full rounded-2xl bg-green-600 text-white py-4 text-lg font-semibold"
+                  >
+                    Book This Helper
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -11,7 +11,8 @@ const createBooking = async (req, res) => {
     if (!helperId || !issueId || !address || !preferredDate || !preferredTime) {
       return res.status(400).json({
         success: false,
-        message: "helperId, issueId, address, preferredDate and preferredTime are required",
+        message:
+          "helperId, issueId, address, preferredDate and preferredTime are required",
       });
     }
 
@@ -75,7 +76,10 @@ const createBooking = async (req, res) => {
 const getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id })
-      .populate("helper", "fullName phone category village serviceCharge availability")
+      .populate(
+        "helper",
+        "fullName phone category village serviceCharge availability",
+      )
       .populate("issue", "category description status address")
       .sort({ createdAt: -1 });
 
@@ -94,11 +98,16 @@ const getMyBookings = async (req, res) => {
 };
 
 // Helper: get assigned bookings
+// const Booking = require("../models/Booking");
+// const Issue = require("../models/Issue");
+// const Helper = require("../models/Helper");
+
+// Helper: get assigned bookings
 const getHelperBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ helper: req.user._id })
       .populate("user", "fullName phone village")
-      .populate("issue", "category description status address")
+      .populate("issue", "category description status address image")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -180,7 +189,10 @@ const getBookingById = async (req, res) => {
 
     const booking = await Booking.findById(id)
       .populate("user", "fullName phone village")
-      .populate("helper", "fullName phone category village serviceCharge availability")
+      .populate(
+        "helper",
+        "fullName phone category village serviceCharge availability",
+      )
       .populate("issue", "category description status address");
 
     if (!booking) {

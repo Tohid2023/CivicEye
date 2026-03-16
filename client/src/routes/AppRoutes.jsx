@@ -14,6 +14,7 @@ import Dashboard from "../pages/admin/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 import HelperRequests from "../pages/HelperRequests";
+import MyIssues from "../pages/MyIssues";
 
 const AppRoutes = () => {
   return (
@@ -115,6 +116,15 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["helper"]}>
             <HelperRequests />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-issues"
+        element={
+          <ProtectedRoute allowedRoles={["user"]}>
+            <MyIssues />
           </ProtectedRoute>
         }
       />

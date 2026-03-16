@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAdminDashboard } from "../../services/adminService";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -9,6 +11,14 @@ const Dashboard = () => {
     totalBookings: 0,
     totalRatings: 0,
   });
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const [recentIssues, setRecentIssues] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
@@ -77,11 +87,20 @@ const Dashboard = () => {
   return (
     <section className="min-h-screen bg-slate-100 px-4 py-6">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8">
-          <h1 className="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
-          <p className="mt-2 text-slate-300">
-            Manage users, helpers, issues, bookings, and platform activity
-          </p>
+        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
+            <p className="mt-2 text-slate-300">
+              Manage users, helpers, issues, bookings, and platform activity
+            </p>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="rounded-xl bg-red-500 px-4 py-2 text-white font-semibold"
+          >
+            Logout
+          </button>
         </div>
 
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
