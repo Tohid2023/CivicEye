@@ -14,8 +14,8 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="text-2xl font-bold text-blue-600">
-          CivicEye
+        <Link to="/">
+          <img src="/CE_icon.png" alt="CivicEye Logo" className="h-10 w-auto" />
         </Link>
 
         <div className="flex gap-6 text-sm font-medium text-slate-700 items-center">
