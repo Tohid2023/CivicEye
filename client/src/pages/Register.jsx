@@ -3,7 +3,7 @@ import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import Button from "../components/common/Button";
 import { useNavigate } from "react-router-dom";
-import { registerUser, registerHelper } from "../services/authService";
+import { sendOtp, verifyOtp, registerUser, registerHelper } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 
 const Register = () => {
@@ -28,7 +28,10 @@ const Register = () => {
   });
 
   const [locationAllowed, setLocationAllowed] = useState(false);
-
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -75,8 +78,60 @@ const Register = () => {
     );
   };
 
+  const handleSendOtp = async () => {
+    if (!formData.phone && !formData.email) {
+      alert("Enter phone or email to receive OTP");
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      await sendOtp({
+        role,
+        phone: formData.phone,
+        email: formData.email,
+      });
+      setOtpSent(true);
+      setIsOtpVerified(false);
+      alert("OTP sent. Check your phone/email and enter below.");
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.trim().length !== 6) {
+      alert("Enter a 6-digit OTP");
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      await verifyOtp({
+        role,
+        phone: formData.phone,
+        email: formData.email,
+        otp: otpCode.trim(),
+      });
+      setIsOtpVerified(true);
+      alert("OTP verified. Now submit registration.");
+    } catch (error) {
+      alert(error.response?.data?.message || "OTP verification failed");
+      setIsOtpVerified(false);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    if (!isOtpVerified) {
+      alert("Please verify OTP before registering.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -93,6 +148,7 @@ const Register = () => {
           village: formData.village,
           latitude: formData.latitude,
           longitude: formData.longitude,
+          otp: otpCode.trim(),
         });
       } else {
         data = await registerHelper({
@@ -107,6 +163,7 @@ const Register = () => {
           longitude: formData.longitude,
           expertise: formData.expertise,
           serviceCharge: Number(formData.serviceCharge) || 0,
+          otp: otpCode.trim(),
         });
       }
 
@@ -278,19 +335,67 @@ const Register = () => {
               </button>
             </div>
 
-            <Button
+            <div className="grid sm:grid-cols-2 gap-4 items-end mt-4">
+              <button
+                type="button"
+                disabled={otpLoading || (!formData.phone && !formData.email)}
+                onClick={handleSendOtp}
+                className="w-full rounded-2xl bg-indigo-600 text-white py-3 font-semibold disabled:opacity-60"
+              >
+                {otpLoading ? "Sending OTP..." : otpSent ? "Resend OTP" : "Get OTP"}
+              </button>
+
+              <button
+                type="button"
+                disabled={otpLoading || !otpSent}
+                onClick={handleVerifyOtp}
+                className="w-full rounded-2xl bg-emerald-600 text-white py-3 font-semibold disabled:opacity-60"
+              >
+                {otpLoading ? "Verifying..." : isOtpVerified ? "OTP Verified" : "Verify OTP"}
+              </button>
+            </div>
+
+            {otpSent && (
+              <input
+                type="text"
+                name="otp"
+                placeholder="Enter 6-digit OTP"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                maxLength={6}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-4 mt-3"
+              />
+            )}
+
+            <div className="rounded-2xl border p-3 mt-3 text-sm font-medium">
+              {!otpSent ? (
+                <p className="text-amber-700 bg-amber-100 rounded-lg p-2">Request an OTP to verify email before registering.</p>
+              ) : !isOtpVerified ? (
+                <p className="text-blue-800 bg-blue-100 rounded-lg p-2">OTP sent. Please verify to enable registration.</p>
+              ) : (
+                <p className="text-emerald-800 bg-emerald-100 rounded-lg p-2">OTP verified. You can now submit the form.</p>
+              )}
+            </div>
+
+            <button
               type="submit"
-              text={
+              disabled={!isOtpVerified || loading}
+              className={`w-full text-white text-lg py-4 rounded-2xl font-semibold transition ${
                 loading
-                  ? "Please wait..."
-                  : role === "user"
-                    ? "Create User Account"
-                    : "Create Helper Account"
-              }
-              className={`text-white text-lg py-4 rounded-2xl ${
-                role === "user" ? "bg-blue-600" : "bg-green-600"
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : !isOtpVerified
+                    ? "bg-slate-300 cursor-not-allowed"
+                    : role === "user"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-green-600 hover:bg-green-700"
               }`}
-            />
+            >
+              {loading
+                ? "Please wait..."
+                : role === "user"
+                  ? "Create User Account"
+                  : "Create Helper Account"}
+            </button>
           </form>
         </div>
       </section>

@@ -2,6 +2,117 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Helper = require("../models/Helper");
 const generateToken = require("../utils/generateToken");
+const { sendOtpEmail } = require("../utils/mailService");
+
+const otpStore = new Map();
+const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const getOtpKey = ({ role, phone, email }) => {
+  const target = (phone || email || "").trim();
+  return `${role}:${target}`;
+};
+
+const storeOtp = (key, otp) => {
+  const expiresAt = Date.now() + OTP_TTL_MS;
+  otpStore.set(key, { otp, expiresAt, verified: false });
+  setTimeout(() => {
+    const entry = otpStore.get(key);
+    if (entry && entry.expiresAt <= Date.now()) {
+      otpStore.delete(key);
+    }
+  }, OTP_TTL_MS + 1000);
+};
+
+const verifyOtpEntry = (key, providedOtp) => {
+  const entry = otpStore.get(key);
+  if (!entry) return false;
+  if (entry.expiresAt < Date.now()) {
+    otpStore.delete(key);
+    return false;
+  }
+  if (entry.otp !== providedOtp) return false;
+  return true;
+};
+
+const consumeOtpEntry = (key) => {
+  otpStore.delete(key);
+};
+
+const sendOtp = async (req, res) => {
+  try {
+    const { role, phone, email } = req.body;
+
+    if (!role || !["user", "helper"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Role must be user or helper" });
+    }
+
+    if (!phone && !email) {
+      return res.status(400).json({ success: false, message: "Phone or email is required" });
+    }
+
+    const target = phone ? phone.trim() : email.trim().toLowerCase();
+    if (!target) {
+      return res.status(400).json({ success: false, message: "Phone/email cannot be empty" });
+    }
+
+    const existing = await (role === "user" ? User.findOne({ $or: [{ phone: phone ? phone.trim() : null }, { email: email ? email.trim().toLowerCase() : null }] }) : Helper.findOne({ $or: [{ phone: phone ? phone.trim() : null }, { email: email ? email.trim().toLowerCase() : null }] }));
+
+    if (existing) {
+      return res.status(400).json({ success: false, message: "Account already exists with this phone/email" });
+    }
+
+    const otp = generateOtp();
+    const key = getOtpKey({ role, phone, email });
+    storeOtp(key, otp);
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required to send OTP via email" });
+    }
+
+    try {
+      await sendOtpEmail({ to: email.trim().toLowerCase(), otp, role });
+    } catch (mailError) {
+      console.error("OTP email send failed:", mailError.message);
+      return res.status(500).json({ success: false, message: "Failed to send OTP email. Check SMTP config." });
+    }
+
+    return res.status(200).json({ success: true, message: "OTP email sent successfully", otpSentTo: target });
+  } catch (error) {
+    console.error("Send OTP Error:", error.message);
+    return res.status(500).json({ success: false, message: "Server error while sending OTP" });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  try {
+    const { role, phone, email, otp } = req.body;
+
+    if (!role || !["user", "helper"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Role must be user or helper" });
+    }
+
+    if (!otp || !/^[0-9]{6}$/.test(otp)) {
+      return res.status(400).json({ success: false, message: "Valid 6-digit OTP is required" });
+    }
+
+    const key = getOtpKey({ role, phone, email });
+
+    const entry = otpStore.get(key);
+    if (!entry || !verifyOtpEntry(key, otp)) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    entry.verified = true;
+    otpStore.set(key, entry);
+
+    return res.status(200).json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    console.error("Verify OTP Error:", error.message);
+    return res.status(500).json({ success: false, message: "Server error while verifying OTP" });
+  }
+};
 
 // Register User
 const registerUser = async (req, res) => {
@@ -15,6 +126,7 @@ const registerUser = async (req, res) => {
       village,
       latitude,
       longitude,
+      otp,
     } = req.body;
 
     if (!fullName || !phone || !password) {
@@ -23,6 +135,17 @@ const registerUser = async (req, res) => {
         message: "Full name, phone, and password are required",
       });
     }
+
+    if (!otp || !/^[0-9]{6}$/.test(otp)) {
+      return res.status(400).json({ success: false, message: "Valid 6-digit OTP is required" });
+    }
+
+    const otpKey = getOtpKey({ role: "user", phone, email });
+    const otpEntry = otpStore.get(otpKey);
+    if (!otpEntry || !otpEntry.verified || otpEntry.otp !== otp || otpEntry.expiresAt < Date.now()) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    }
+    consumeOtpEntry(otpKey);
 
     const cleanedPhone = phone.trim();
     const cleanedEmail = email ? email.trim().toLowerCase() : "";
@@ -92,6 +215,7 @@ const registerHelper = async (req, res) => {
       serviceCharge,
       latitude,
       longitude,
+      otp,
     } = req.body;
 
     if (!fullName || !phone || !password || !category || !village) {
@@ -101,6 +225,17 @@ const registerHelper = async (req, res) => {
           "Full name, phone, password, category, and village are required",
       });
     }
+
+    if (!otp || !/^[0-9]{6}$/.test(otp)) {
+      return res.status(400).json({ success: false, message: "Valid 6-digit OTP is required" });
+    }
+
+    const otpKey = getOtpKey({ role: "helper", phone, email });
+    const otpEntry = otpStore.get(otpKey);
+    if (!otpEntry || !otpEntry.verified || otpEntry.otp !== otp || otpEntry.expiresAt < Date.now()) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    }
+    consumeOtpEntry(otpKey);
 
     const cleanedPhone = phone.trim();
     const cleanedEmail = email ? email.trim().toLowerCase() : "";
@@ -243,6 +378,8 @@ const loginAccount = async (req, res) => {
 };
 
 module.exports = {
+  sendOtp,
+  verifyOtp,
   registerUser,
   registerHelper,
   loginAccount,
