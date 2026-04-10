@@ -102,6 +102,22 @@ const ReportIssue = () => {
       (error) => {
         console.error("Location error:", error.code, error.message);
         setLocationStatus("error");
+        
+        let errorMsg = "Could not detect location automatically.";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMsg = "Location access denied. Please allow permission or enter the address manually.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMsg = "Location information unavailable. Please enter the address manually.";
+            break;
+          case error.TIMEOUT:
+            errorMsg = "Location request timed out. Please try again or enter manually.";
+            break;
+          default:
+            errorMsg = "An unknown error occurred. Please enter the address manually.";
+        }
+        alert(errorMsg);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );

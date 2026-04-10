@@ -74,6 +74,24 @@ const Register = () => {
       },
       (error) => {
         setLocationState("error");
+        let errorMsg = "Could not fetch location automatically.";
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMsg = "Location access denied. Please allow permission or enter your village/area manually.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMsg = "Location information is unavailable. Please enter it manually.";
+            break;
+          case error.TIMEOUT:
+            errorMsg = "Location request timed out. Please try again or enter manually.";
+            break;
+          default:
+            errorMsg = "An unknown error occurred while fetching location.";
+        }
+        
+        alert(errorMsg);
+        // Fallback to a central coordinate but prompt for manual input
         setFormData((prev) => ({
           ...prev,
           latitude: 22.1347,
@@ -155,7 +173,7 @@ const Register = () => {
 
       login(data.token, data.user || data.helper);
       if (role === "helper") {
-        navigate("/helpers");
+        navigate("/helper-requests");
       } else {
         navigate("/home");
       }

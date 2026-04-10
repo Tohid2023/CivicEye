@@ -34,7 +34,7 @@ const Login = () => {
       const data = await loginAccount(formData);
       login(data.token, data.account);
       if (data.account.role === "helper") {
-        navigate("/helpers");
+        navigate("/helper-requests");
       } else {
         navigate("/home");
       }
