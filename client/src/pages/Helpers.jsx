@@ -135,14 +135,14 @@ const Helpers = () => {
                 onClick={() => setSearchRadius(5)}
                 className="rounded-2xl bg-blue-600 text-white py-4 font-semibold"
               >
-                5 km Range
+                Near me
               </button>
 
               <button
                 onClick={() => setSearchRadius(10)}
                 className="rounded-2xl border border-slate-300 bg-white text-slate-700 py-4 font-semibold"
               >
-                Go 10 km
+                Expand area
               </button>
             </div>
           </div>

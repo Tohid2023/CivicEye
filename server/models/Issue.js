@@ -37,7 +37,15 @@ const issueSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "matched", "booked", "in-progress", "completed", "cancelled"],
+      enum: [
+        "pending",
+        "matched",
+        "booked",
+        "assigned",
+        "in-progress",
+        "completed",
+        "cancelled",
+      ],
       default: "pending",
     },
     matchedHelpers: [
@@ -52,7 +60,7 @@ const issueSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Issue", issueSchema);
