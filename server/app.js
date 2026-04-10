@@ -6,7 +6,6 @@ const path = require("path");
 dotenv.config();
 
 const authRoutes = require("./routes/authRoutes");
-const testRoutes = require("./routes/testRoutes");
 const issueRoutes = require("./routes/issueRoutes");
 const helperRoutes = require("./routes/helperRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
@@ -29,7 +28,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/test", testRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/helpers", helperRoutes);
 app.use("/api/bookings", bookingRoutes);

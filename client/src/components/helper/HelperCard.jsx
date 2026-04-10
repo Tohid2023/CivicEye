@@ -1,5 +1,32 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { 
+  Star, 
+  MapPin, 
+  IndianRupee, 
+  User, 
+  Phone, 
+  CalendarCheck, 
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  Droplet,
+  Road,
+  Trash2,
+  Hammer,
+  MoreHorizontal
+} from "lucide-react";
+import { cn } from "../../lib/utils";
+
+const categoryIcons = {
+  electrician: Zap,
+  plumber: Droplet,
+  "road-worker": Road,
+  cleaner: Trash2,
+  technician: Hammer,
+  other: MoreHorizontal,
+};
 
 const HelperCard = ({ helper }) => {
   const navigate = useNavigate();
@@ -12,76 +39,103 @@ const HelperCard = ({ helper }) => {
     navigate("/booking", { state: helper });
   };
 
+  const Icon = categoryIcons[helper.category?.toLowerCase()] || MoreHorizontal;
+
   return (
-    <div className="bg-white rounded-3xl shadow-sm p-5 border border-slate-100">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-xl font-bold text-slate-900">
-            {helper.fullName || "Helper"}
-          </h3>
-          <p className="text-sm text-slate-600 mt-1">
-            {helper.category || "Service"}
-          </p>
+    <motion.div
+      whileHover={{ translateY: -5 }}
+      className="glass p-6 rounded-[2.5rem] shadow-xl border-white/50 relative overflow-hidden group"
+    >
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100">
+            <User size={28} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 leading-tight">
+              {helper.fullName || "Verified Helper"}
+            </h3>
+            <div className="flex items-center gap-1.5 text-blue-600 font-bold text-xs uppercase tracking-wider mt-1">
+              <Icon size={14} />
+              {helper.category || "General Service"}
+            </div>
+          </div>
         </div>
 
-        <span
-          className={`text-xs font-semibold px-3 py-1 rounded-full ${
-            helper.availability === "available"
-              ? "bg-green-100 text-green-700"
-              : helper.availability === "busy"
-              ? "bg-red-100 text-red-700"
-              : "bg-slate-100 text-slate-700"
-          }`}
-        >
-          {helper.availability || "Unknown"}
-        </span>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="bg-slate-50 rounded-2xl p-3">
-          <p className="text-xs text-slate-500">Distance</p>
-          <p className="text-base font-semibold text-slate-800">
-            {helper.distance !== null && helper.distance !== undefined
-              ? `${helper.distance} km`
-              : "N/A"}
-          </p>
-        </div>
-
-        <div className="bg-slate-50 rounded-2xl p-3">
-          <p className="text-xs text-slate-500">Rating</p>
-          <p className="text-base font-semibold text-slate-800">
-            ⭐ {helper.averageRating ?? 0}
-          </p>
-        </div>
-
-        <div className="bg-slate-50 rounded-2xl p-3 col-span-2">
-          <p className="text-xs text-slate-500">Approximate Charge</p>
-          <p className="text-base font-semibold text-slate-800">
-            ₹{helper.serviceCharge ?? 0}
-          </p>
+        <div className={cn(
+          "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
+          helper.availability === "available" 
+            ? "bg-emerald-50 border-emerald-100 text-emerald-600" 
+            : "bg-red-50 border-red-100 text-red-600"
+        )}>
+          {helper.availability || "Status"}
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <button
-          onClick={handleViewProfile}
-          className="rounded-2xl border border-blue-200 text-blue-700 py-3 font-semibold"
-        >
-          View Profile
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        <div className="p-3 bg-white/40 rounded-2xl border border-white/60">
+          <div className="flex items-center gap-1.5 text-slate-400 mb-1">
+            <MapPin size={12} />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Distance</span>
+          </div>
+          <p className="text-lg font-extrabold text-slate-800">
+            {helper.distance ? `${helper.distance}km` : "N/A"}
+          </p>
+        </div>
+
+        <div className="p-3 bg-white/40 rounded-2xl border border-white/60">
+          <div className="flex items-center gap-1.5 text-amber-500 mb-1">
+            <Star size={12} fill="currentColor" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rating</span>
+          </div>
+          <p className="text-lg font-extrabold text-slate-800">
+            {helper.averageRating ?? "5.0"}
+          </p>
+        </div>
+
+        <div className="p-3 bg-white/40 rounded-2xl border border-white/60 col-span-2 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 text-slate-400 mb-1">
+              <IndianRupee size={12} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Standard Fee</span>
+            </div>
+            <p className="text-lg font-extrabold text-slate-900">
+              ₹{helper.serviceCharge ?? "250"}
+            </p>
+          </div>
+          <div className="text-emerald-500">
+            <ShieldCheck size={28} />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex gap-3">
+          <button
+            onClick={handleViewProfile}
+            className="flex-1 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
+          >
+            Profile
+          </button>
+          <button
+            onClick={handleBook}
+            className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+          >
+            <CalendarCheck size={16} />
+            Book Now
+          </button>
+        </div>
+        
+        <button className="w-full py-4 rounded-xl bg-blue-600 text-white font-extrabold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-3">
+          <Phone size={18} />
+          Contact Specialized Help
+          <ArrowRight size={18} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
         </button>
-
-        <button
-          onClick={handleBook}
-          className="rounded-2xl bg-green-600 text-white py-3 font-semibold"
-        >
-          Book
-        </button>
       </div>
 
-      <button className="mt-3 w-full rounded-2xl bg-blue-600 text-white py-3 font-semibold">
-        Contact
-      </button>
-    </div>
+      {/* Decorative pulse info */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-colors"></div>
+    </motion.div>
   );
 };
 

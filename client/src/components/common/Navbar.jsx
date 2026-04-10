@@ -1,114 +1,185 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  LogOut, 
+  Menu, 
+  X, 
+  Home, 
+  PlusCircle, 
+  ClipboardList, 
+  Users, 
+  Star, 
+  LayoutDashboard, 
+  UserCircle 
+} from "lucide-react";
+import { cn } from "../../lib/utils";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { authUser, isAuthenticated, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
+  const navLinks = {
+    user: [
+      { name: "Home", path: "/home", icon: Home },
+      { name: "Report", path: "/report", icon: PlusCircle },
+      { name: "My Issues", path: "/my-issues", icon: ClipboardList },
+      { name: "Helpers", path: "/helpers", icon: Users },
+      { name: "Rating", path: "/rating", icon: Star },
+    ],
+    helper: [
+      { name: "Requests", path: "/helper-requests", icon: ClipboardList },
+      { name: "Helpers", path: "/helpers", icon: Users },
+      { name: "Profile", path: "/helper-profile", icon: UserCircle },
+    ],
+    admin: [
+      { name: "Dashboard", path: "/admin-dashboard", icon: LayoutDashboard },
+    ],
+    public: [
+      { name: "Home", path: "/", icon: Home },
+      { name: "Login", path: "/login", icon: null },
+      { name: "Register", path: "/register", icon: null },
+    ]
+  };
+
+  const currentLinks = isAuthenticated 
+    ? navLinks[authUser?.role] || [] 
+    : navLinks.public;
+
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/">
-          <img src="/CE_icon.png" alt="CivicEye Logo" className="h-10 w-auto" />
+    <nav 
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 py-3",
+        scrolled ? "bg-white/80 backdrop-blur-md shadow-lg py-2" : "bg-transparent"
+      )}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 group">
+          <motion.div
+            whileHover={{ rotate: 10 }}
+            className="bg-blue-600 p-1.5 rounded-lg shadow-lg"
+          >
+            <img src="/CE_icon.png" alt="CivicEye" className="h-7 w-auto brightness-0 invert" />
+          </motion.div>
+          <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
+            Civic<span className="text-blue-600 group-hover:text-slate-900">Eye</span>
+          </span>
         </Link>
 
-        <div className="flex gap-6 text-sm font-medium text-slate-700 items-center">
-          {!isAuthenticated && (
-            <>
-              <Link to="/" className="hover:text-blue-600">
-                Home
-              </Link>
-              <Link to="/login" className="hover:text-blue-600">
-                Login
-              </Link>
-              <Link to="/register" className="hover:text-blue-600">
-                Register
-              </Link>
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-1">
+          {currentLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                location.pathname === link.path 
+                  ? "bg-blue-50 text-blue-600" 
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              )}
+            >
+              {link.name}
+            </Link>
+          ))}
+
+          {isAuthenticated ? (
+            <div className="flex items-center gap-4 ml-4 pl-4 border-l border-slate-200">
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-semibold text-slate-900 leading-none">
+                  {authUser?.fullName}
+                </span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                  {authUser?.role}
+                </span>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <LogOut size={20} />
+              </motion.button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 ml-4">
               <Link
                 to="/admin-login"
-                className="text-xs text-slate-400 hover:text-slate-600"
+                className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
               >
                 Admin
               </Link>
-            </>
-          )}
-
-          {isAuthenticated && authUser?.role === "user" && (
-            <>
-              <Link to="/home" className="hover:text-blue-600">
-                Home
-              </Link>
-              <Link to="/report" className="hover:text-blue-600">
-                Report
-              </Link>
-              <Link to="/my-issues" className="hover:text-blue-600">
-                My Issues
-              </Link>
-              <Link to="/helpers" className="hover:text-blue-600">
-                Helpers
-              </Link>
-              <Link to="/rating" className="hover:text-blue-600">
-                Rating
-              </Link>
-              <span className="text-slate-500">
-                {authUser?.fullName || "User"}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="rounded-xl bg-red-500 px-4 py-2 text-white"
-              >
-                Logout
-              </button>
-            </>
-          )}
-
-          {isAuthenticated && authUser?.role === "helper" && (
-            <>
-              <Link to="/helper-requests" className="hover:text-blue-600">
-                Requests
-              </Link>
-              <Link to="/helpers" className="hover:text-blue-600">
-                Helpers
-              </Link>
-              <Link to="/helper-profile" className="hover:text-blue-600">
-                Profile
-              </Link>
-              <span className="text-slate-500">
-                {authUser?.fullName || "Helper"}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="rounded-xl bg-red-500 px-4 py-2 text-white"
-              >
-                Logout
-              </button>
-            </>
-          )}
-
-          {isAuthenticated && authUser?.role === "admin" && (
-            <>
-              <Link to="/admin-dashboard" className="hover:text-blue-600">
-                Dashboard
-              </Link>
-              <span className="text-slate-500">
-                {authUser?.fullName || "Admin"}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="rounded-xl bg-red-500 px-4 py-2 text-white"
-              >
-                Logout
-              </button>
-            </>
+            </div>
           )}
         </div>
+
+        {/* Mobile Toggle */}
+        <button 
+          className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      {/* Mobile Nav */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-full left-0 right-0 bg-white shadow-xl border-t border-slate-100 p-4 flex flex-col gap-2 md:hidden"
+          >
+            {currentLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  "px-4 py-3 rounded-xl text-base font-medium flex items-center gap-3",
+                  location.pathname === link.path 
+                    ? "bg-blue-50 text-blue-600" 
+                    : "text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                {link.icon && <link.icon size={20} />}
+                {link.name}
+              </Link>
+            ))}
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+                className="mt-2 px-4 py-3 rounded-xl text-red-600 font-medium flex items-center gap-3 hover:bg-red-50"
+              >
+                <LogOut size={20} />
+                Logout
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

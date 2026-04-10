@@ -3,6 +3,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { createBooking } from "../services/bookingService";
+import { motion } from "framer-motion";
+import { 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  MessageSquare, 
+  CheckCircle2, 
+  User, 
+  IndianRupee,
+  ShieldCheck,
+  ArrowRight
+} from "lucide-react";
+import { cn } from "../lib/utils";
 
 const Booking = () => {
   const location = useLocation();
@@ -10,14 +23,12 @@ const Booking = () => {
 
   const helper = location.state || {
     _id: "1",
-    fullName: "Ramesh Electrician",
-    category: "electrician",
+    fullName: "Community Helper",
+    category: "Service Provider",
     distance: 2.5,
     averageRating: 4.8,
     serviceCharge: 250,
     availability: "available",
-    village: "Rampura",
-    phone: "9876543210",
   };
 
   const [bookingData, setBookingData] = useState({
@@ -27,6 +38,8 @@ const Booking = () => {
     note: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setBookingData((prev) => ({
       ...prev,
@@ -35,161 +48,184 @@ const Booking = () => {
   };
 
   const handleConfirmBooking = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const selectedIssueId = localStorage.getItem("selected_issue_id");
 
-  try {
-    const selectedIssueId = localStorage.getItem("selected_issue_id");
+      if (!selectedIssueId) {
+        alert("Please report an issue first before booking a helper");
+        navigate("/report");
+        return;
+      }
 
-    if (!selectedIssueId) {
-      alert("Please report an issue first before booking a helper");
-      navigate("/report");
-      return;
+      const data = await createBooking({
+        helperId: helper._id || helper.id,
+        issueId: selectedIssueId,
+        address: bookingData.address,
+        preferredDate: bookingData.date,
+        note: bookingData.note,
+        preferredTime: bookingData.time,
+      });
+
+      localStorage.setItem("selected_booking_id", data.booking._id);
+      navigate("/rating");
+    } catch (error) {
+      alert(error.response?.data?.message || "Booking failed");
+    } finally {
+      setLoading(false);
     }
-
-    const data = await createBooking({
-      helperId: helper._id || helper.id,
-      issueId: selectedIssueId,
-      address: bookingData.address,
-      preferredDate: bookingData.date,
-      note: bookingData.note,
-      preferredTime: bookingData.time,
-    });
-
-    localStorage.setItem("selected_booking_id", data.booking._id);
-
-    alert("Booking request sent successfully");
-    navigate("/rating");
-  } catch (error) {
-    alert(error.response?.data?.message || "Booking failed");
-  }
-};
+  };
 
   return (
-    <>
+    <div className="bg-mesh min-h-screen">
       <Navbar />
 
-      <section className="min-h-screen bg-slate-50 px-4 py-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white p-6 sm:p-8">
-              <h1 className="text-3xl sm:text-4xl font-bold">
-                Confirm Booking
-              </h1>
-              <p className="mt-2 text-green-50">
-                Check helper details and confirm your service request
-              </p>
+      <main className="max-w-4xl mx-auto px-4 pt-28 pb-20">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-[3rem] overflow-hidden shadow-2xl border-white/50"
+        >
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-emerald-600 p-10 text-white relative overflow-hidden text-center md:text-left">
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-white text-xs font-bold uppercase tracking-widest mb-4">
+                <CheckCircle2 size={14} />
+                <span>Final Step</span>
+              </div>
+              <h1 className="text-4xl font-extrabold tracking-tight mb-2">Confirm Booking</h1>
+              <p className="text-blue-50 font-medium opacity-90">Send your service request to {helper.fullName}</p>
             </div>
+            
+            {/* Background design */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+          </div>
 
-            <div className="p-6 sm:p-8">
-              <div className="bg-slate-50 rounded-2xl p-5">
-                <h2 className="text-2xl font-bold text-slate-900">
-                  {helper.fullName}
-                </h2>
-                <p className="mt-1 text-slate-600">{helper.category}</p>
-
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                    <p className="text-sm text-slate-500">Distance</p>
-                    <p className="mt-1 font-semibold text-slate-800">
-                      {helper.distance ? `${helper.distance} km` : "N/A"}
-                    </p>
+          <div className="p-8 md:p-12">
+            <div className="grid md:grid-cols-12 gap-12">
+              {/* Left Side: Helper Info Summary */}
+              <div className="md:col-span-12 lg:col-span-4 space-y-6">
+                <div className="glass-dark p-8 rounded-[2rem] text-white space-y-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-20 h-20 rounded-3xl bg-white/20 flex items-center justify-center mb-4">
+                      <User size={40} />
+                    </div>
+                    <h3 className="text-2xl font-bold">{helper.fullName}</h3>
+                    <p className="text-blue-200 text-sm font-medium uppercase tracking-wider">{helper.category}</p>
                   </div>
-
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                    <p className="text-sm text-slate-500">Rating</p>
-                    <p className="mt-1 font-semibold text-slate-800">
-                      ⭐ {helper.averageRating || 0}
-                    </p>
+                  
+                  <div className="space-y-4 pt-6 border-t border-white/10">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300 text-xs font-bold uppercase">Base Charge</span>
+                      <span className="text-xl font-extrabold">₹{helper.serviceCharge}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-300 uppercase text-[10px] font-bold">Community Rating</span>
+                      <span className="font-bold">⭐ {helper.averageRating || "5.0"}</span>
+                    </div>
                   </div>
-
-                  <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                    <p className="text-sm text-slate-500">Charge</p>
-                    <p className="mt-1 font-semibold text-slate-800">
-                      ₹ {helper.serviceCharge || 0}
-                    </p>
+                  
+                  <div className="pt-6 border-t border-white/10 gap-2 flex flex-col">
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                      <ShieldCheck size={16} />
+                      Verified Provider
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <form onSubmit={handleConfirmBooking} className="mt-8 space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Service Address
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={bookingData.address}
-                    onChange={handleChange}
-                    placeholder="Enter village, road, or house location"
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base outline-none focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Preferred Date
-                    </label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={bookingData.date}
-                      onChange={handleChange}
-                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base outline-none focus:border-blue-500"
-                      required
-                    />
+              {/* Right Side: Booking Form */}
+              <div className="md:col-span-12 lg:col-span-8">
+                <form onSubmit={handleConfirmBooking} className="space-y-6">
+                  <div className="relative group">
+                    <label className="text-xs font-bold text-slate-500 uppercase ml-2 mb-2 block tracking-widest">Service Address</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                      <input
+                        type="text"
+                        name="address"
+                        value={bookingData.address}
+                        onChange={handleChange}
+                        required
+                        placeholder="Village name, road, or house location"
+                        className="w-full bg-white/50 border border-slate-200 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Preferred Time
-                    </label>
-                    <input
-                      type="time"
-                      name="time"
-                      value={bookingData.time}
-                      onChange={handleChange}
-                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base outline-none focus:border-blue-500"
-                      required
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="group">
+                      <label className="text-xs font-bold text-slate-500 uppercase ml-2 mb-2 block tracking-widest">Preferred Date</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                        <input
+                          type="date"
+                          name="date"
+                          value={bookingData.date}
+                          onChange={handleChange}
+                          required
+                          className="w-full bg-white/50 border border-slate-200 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="group">
+                      <label className="text-xs font-bold text-slate-500 uppercase ml-2 mb-2 block tracking-widest">Arrival Time</label>
+                      <div className="relative">
+                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                        <input
+                          type="time"
+                          name="time"
+                          value={bookingData.time}
+                          onChange={handleChange}
+                          required
+                          className="w-full bg-white/50 border border-slate-200 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Note for Helper
-                  </label>
-                  <textarea
-                    name="note"
-                    value={bookingData.note}
-                    onChange={handleChange}
-                    placeholder="Example: Please come near the temple road"
-                    className="w-full h-32 rounded-2xl border border-slate-300 bg-white px-4 py-4 text-base outline-none focus:border-blue-500"
-                  />
-                </div>
+                  <div className="group">
+                    <label className="text-xs font-bold text-slate-500 uppercase ml-2 mb-2 block tracking-widest">Notes for Helper</label>
+                    <div className="relative">
+                      <MessageSquare className="absolute left-4 top-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                      <textarea
+                        name="note"
+                        value={bookingData.note}
+                        onChange={handleChange}
+                        placeholder="Add special instructions for the professional..."
+                        className="w-full bg-white/50 border border-slate-200 rounded-2xl px-12 py-4 h-32 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium resize-none"
+                      />
+                    </div>
+                  </div>
 
-                <div className="bg-green-50 border border-green-100 rounded-2xl p-4">
-                  <p className="text-sm text-slate-700">
-                    After booking, the helper can accept or reject your request.
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full rounded-2xl bg-green-600 text-white py-4 text-lg font-semibold"
-                >
-                  Confirm Booking
-                </button>
-              </form>
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full flex items-center justify-center gap-3 py-5 rounded-[2rem] bg-blue-600 text-white text-xl font-bold shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all hover:scale-[1.02] disabled:opacity-50"
+                    >
+                      {loading ? "Processing..." : (
+                        <>
+                          Send Booking Request
+                          <ArrowRight size={24} />
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-slate-400 text-xs mt-4 font-bold uppercase tracking-tighter">
+                      The helper will be notified immediately of your request
+                    </p>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </main>
 
       <Footer />
-    </>
+    </div>
   );
 };
 

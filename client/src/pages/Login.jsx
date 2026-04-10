@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
-import Button from "../components/common/Button";
 import { Link, useNavigate } from "react-router-dom";
 import { loginAccount } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
+import { motion } from "framer-motion";
+import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { cn } from "../lib/utils";
 
 const Login = () => {
   const { login } = useAuth();
@@ -27,16 +29,10 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       setLoading(true);
-
       const data = await loginAccount(formData);
-
       login(data.token, data.account);
-
-      alert(data.message);
-
       if (data.account.role === "helper") {
         navigate("/helpers");
       } else {
@@ -50,80 +46,104 @@ const Login = () => {
   };
 
   return (
-    <>
+    <div className="bg-mesh min-h-screen flex flex-col">
       <Navbar />
 
-      <section className="min-h-screen bg-blue-50 px-4 py-8 flex items-center justify-center">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-6 sm:p-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-slate-900">Login</h1>
-            <p className="mt-2 text-slate-600">
-              Login using email or phone number
-            </p>
-          </div>
+      <main className="flex-1 flex items-center justify-center p-4 pt-24">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <div className="glass p-8 sm:p-10 rounded-[2.5rem] shadow-2xl border-white/40">
+            <div className="text-center mb-10">
+              <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Welcome Back</h1>
+              <p className="mt-3 text-slate-500 font-medium">Access your community dashboard</p>
+            </div>
 
-          <form onSubmit={handleLogin} className="mt-6 space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Login As
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4"
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 ml-1">Login As</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <User size={20} />
+                  </div>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full bg-white/50 border border-slate-200 rounded-2xl px-12 py-4 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium text-slate-700"
+                  >
+                    <option value="user">Community Member (User)</option>
+                    <option value="helper">Service Provider (Helper)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 ml-1">Email or Phone</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <Mail size={20} />
+                  </div>
+                  <input
+                    type="text"
+                    name="emailOrPhone"
+                    placeholder="name@example.com"
+                    value={formData.emailOrPhone}
+                    onChange={handleChange}
+                    className="w-full bg-white/50 border border-slate-200 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 ml-1">Password</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <Lock size={20} />
+                  </div>
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full bg-white/50 border border-slate-200 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full btn-primary py-4 mt-4 flex items-center justify-center gap-2 group disabled:opacity-70"
               >
-                <option value="user">User</option>
-                <option value="helper">Helper</option>
-              </select>
+                {loading ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-10 pt-8 border-t border-slate-200 text-center">
+              <p className="text-slate-500 font-medium">
+                New to CivicEye?{" "}
+                <Link to="/register" className="text-blue-600 font-bold hover:underline">
+                  Create an account
+                </Link>
+              </p>
             </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Email or Phone Number
-              </label>
-              <input
-                type="text"
-                name="emailOrPhone"
-                placeholder="Enter email or phone"
-                value={formData.emailOrPhone}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              text={loading ? "Logging in..." : "Login"}
-              className="bg-blue-600 text-white text-lg py-4 rounded-2xl"
-            />
-          </form>
-
-          <p className="text-center text-sm text-slate-600 mt-5">
-            Don’t have an account?{" "}
-            <Link to="/register" className="text-blue-600 font-semibold">
-              Register
-            </Link>
-          </p>
-        </div>
-      </section>
+          </div>
+        </motion.div>
+      </main>
 
       <Footer />
-    </>
+    </div>
   );
 };
 
