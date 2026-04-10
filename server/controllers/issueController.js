@@ -49,7 +49,7 @@ const createIssue = async (req, res) => {
 const getMyIssues = async (req, res) => {
   try {
     const issues = await Issue.find({ user: req.user._id })
-      .populate("assignedHelper", "fullName phone category village")
+      .populate("assignedHelper", "fullName phone category")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -61,7 +61,7 @@ const getMyIssues = async (req, res) => {
     console.error("Get My Issues Error:", error.message);
     return res.status(500).json({
       success: false,
-      message: "Server error while fetching user issues",
+      message: "Server error while fetching issues",
     });
   }
 };

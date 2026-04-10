@@ -1,34 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { 
-  Star, 
-  MapPin, 
-  IndianRupee, 
-  User, 
-  Phone, 
-  CalendarCheck, 
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  Droplet,
-  Road,
-  Trash2,
-  Hammer,
-  MoreHorizontal
-} from "lucide-react";
-import { cn } from "../../lib/utils";
 
-const categoryIcons = {
-  electrician: Zap,
-  plumber: Droplet,
-  "road-worker": Road,
-  cleaner: Trash2,
-  technician: Hammer,
-  other: MoreHorizontal,
-};
-
-const HelperCard = ({ helper }) => {
+const HelperCard = ({
+  helper,
+  bookingStatus = null,
+  issueLocked = false,
+  lockedHelperId = null,
+  allowBooking = false,
+}) => {
   const navigate = useNavigate();
 
   const handleViewProfile = () => {
@@ -36,106 +15,171 @@ const HelperCard = ({ helper }) => {
   };
 
   const handleBook = () => {
+    if (!allowBooking) return;
+    if (issueLocked) return;
+    if (bookingStatus && bookingStatus !== "cancelled") return;
     navigate("/booking", { state: helper });
   };
 
-  const Icon = categoryIcons[helper.category?.toLowerCase()] || MoreHorizontal;
+  const isThisAssignedHelper = lockedHelperId === helper._id;
+
+  const getButtonText = () => {
+    // 🚫 Navbar case (no issue selected)
+    if (!allowBooking) {
+      return "Select Issue";
+    }
+
+    // 🔒 Issue already locked (other helpers)
+    if (issueLocked && !isThisAssignedHelper) {
+      return "Issue Assigned";
+    }
+
+    // ✅ Assigned helper
+    if (isThisAssignedHelper) {
+      switch (bookingStatus) {
+        case "pending":
+          return "Request Sent";
+        case "accepted":
+          return "Accepted";
+        case "in-progress":
+          return "In Progress";
+        case "completed":
+          return "Completed";
+        case "rejected":
+          return "Rejected";
+        default:
+          return "Assigned";
+      }
+    }
+
+    // 🟢 Normal case
+    switch (bookingStatus) {
+      case "pending":
+        return "Request Sent";
+      case "accepted":
+        return "Accepted";
+      case "rejected":
+        return "Rejected";
+      case "completed":
+        return "Completed";
+      default:
+        return "Book Now";
+    }
+  };
+
+  const getButtonClass = () => {
+    // 🚫 Navbar case
+    if (!allowBooking) {
+      return "bg-slate-400 text-white";
+    }
+
+    // 🔒 Other helpers disabled
+    if (issueLocked && !isThisAssignedHelper) {
+      return "bg-slate-400 text-white";
+    }
+
+    // ✅ Assigned helper styling
+    if (isThisAssignedHelper) {
+      switch (bookingStatus) {
+        case "pending":
+          return "bg-yellow-500 text-white";
+        case "accepted":
+          return "bg-green-600 text-white";
+        case "in-progress":
+          return "bg-blue-600 text-white";
+        case "completed":
+          return "bg-indigo-600 text-white";
+        case "rejected":
+          return "bg-red-500 text-white";
+        default:
+          return "bg-slate-500 text-white";
+      }
+    }
+
+    // 🟢 Normal case
+    switch (bookingStatus) {
+      case "pending":
+        return "bg-yellow-500 text-white";
+      case "accepted":
+        return "bg-green-600 text-white";
+      case "rejected":
+        return "bg-red-500 text-white";
+      case "completed":
+        return "bg-blue-600 text-white";
+      default:
+        return "bg-green-600 text-white";
+    }
+  };
+
+  const disabled =
+    !allowBooking ||
+    issueLocked ||
+    (bookingStatus && bookingStatus !== "cancelled");
 
   return (
-    <motion.div
-      whileHover={{ translateY: -5 }}
-      className="glass p-6 rounded-[2.5rem] shadow-xl border-white/50 relative overflow-hidden group"
-    >
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100">
-            <User size={28} />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 leading-tight">
-              {helper.fullName || "Verified Helper"}
-            </h3>
-            <div className="flex items-center gap-1.5 text-blue-600 font-bold text-xs uppercase tracking-wider mt-1">
-              <Icon size={14} />
-              {helper.category || "General Service"}
-            </div>
-          </div>
-        </div>
-
-        <div className={cn(
-          "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
-          helper.availability === "available" 
-            ? "bg-emerald-50 border-emerald-100 text-emerald-600" 
-            : "bg-red-50 border-red-100 text-red-600"
-        )}>
-          {helper.availability || "Status"}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        <div className="p-3 bg-white/40 rounded-2xl border border-white/60">
-          <div className="flex items-center gap-1.5 text-slate-400 mb-1">
-            <MapPin size={12} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Distance</span>
-          </div>
-          <p className="text-lg font-extrabold text-slate-800">
-            {helper.distance ? `${helper.distance}km` : "N/A"}
+    <div className="bg-white rounded-3xl shadow-sm p-5 border border-slate-100">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-2xl font-bold text-slate-900">
+            {helper.fullName}
+          </h3>
+          <p className="text-sm font-semibold text-blue-600 uppercase">
+            {helper.category}
           </p>
         </div>
 
-        <div className="p-3 bg-white/40 rounded-2xl border border-white/60">
-          <div className="flex items-center gap-1.5 text-amber-500 mb-1">
-            <Star size={12} fill="currentColor" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rating</span>
-          </div>
-          <p className="text-lg font-extrabold text-slate-800">
-            {helper.averageRating ?? "5.0"}
+        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-100 text-emerald-700">
+          {helper.availability}
+        </span>
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-xs text-slate-400 uppercase">Distance</p>
+          <p className="text-3xl font-bold text-slate-900">
+            {helper.distance ?? "N/A"}
+            {helper.distance ? "km" : ""}
           </p>
         </div>
 
-        <div className="p-3 bg-white/40 rounded-2xl border border-white/60 col-span-2 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-1.5 text-slate-400 mb-1">
-              <IndianRupee size={12} />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Standard Fee</span>
-            </div>
-            <p className="text-lg font-extrabold text-slate-900">
-              ₹{helper.serviceCharge ?? "250"}
-            </p>
-          </div>
-          <div className="text-emerald-500">
-            <ShieldCheck size={28} />
-          </div>
+        <div>
+          <p className="text-xs text-slate-400 uppercase">Rating</p>
+          <p className="text-3xl font-bold text-slate-900">
+            {helper.averageRating ?? 0}
+          </p>
+        </div>
+
+        <div className="col-span-2">
+          <p className="text-xs text-slate-400 uppercase">Standard Fee</p>
+          <p className="text-3xl font-bold text-slate-900">
+            ₹{helper.serviceCharge ?? 0}
+          </p>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex gap-3">
-          <button
-            onClick={handleViewProfile}
-            className="flex-1 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
-          >
-            Profile
-          </button>
-          <button
-            onClick={handleBook}
-            className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
-          >
-            <CalendarCheck size={16} />
-            Book Now
-          </button>
-        </div>
-        
-        <button className="w-full py-4 rounded-xl bg-blue-600 text-white font-extrabold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-3">
-          <Phone size={18} />
-          Contact Specialized Help
-          <ArrowRight size={18} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        <button
+          onClick={handleViewProfile}
+          className="rounded-2xl border border-slate-300 py-3 font-semibold text-slate-700"
+        >
+          Profile
+        </button>
+
+        <button
+          onClick={handleBook}
+          disabled={disabled}
+          className={`rounded-2xl py-3 font-semibold ${getButtonClass()} ${
+            disabled ? "opacity-80 cursor-not-allowed" : ""
+          }`}
+        >
+          {getButtonText()}
         </button>
       </div>
 
-      {/* Decorative pulse info */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-colors"></div>
-    </motion.div>
+      <div className="mt-3 w-full rounded-2xl bg-blue-600 text-white py-3 font-semibold text-center">
+        Contact Specialized Help
+      </div>
+    </div>
   );
 };
 

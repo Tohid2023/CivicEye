@@ -40,6 +40,20 @@ const createBooking = async (req, res) => {
       });
     }
 
+    // Prevent duplicate active booking for same issue
+    const existingActiveBooking = await Booking.findOne({
+      user: req.user._id,
+      issue: issueId,
+      status: { $in: ["pending", "accepted"] },
+    });
+
+    if (existingActiveBooking) {
+      return res.status(400).json({
+        success: false,
+        message: "You already have an active booking for this issue",
+      });
+    }
+
     const booking = await Booking.create({
       user: req.user._id,
       helper: helperId,
@@ -53,9 +67,11 @@ const createBooking = async (req, res) => {
 
     issue.assignedHelper = helperId;
     issue.status = "booked";
+
     if (!issue.matchedHelpers.includes(helperId)) {
       issue.matchedHelpers.push(helperId);
     }
+
     await issue.save();
 
     return res.status(201).json({
@@ -80,7 +96,7 @@ const getMyBookings = async (req, res) => {
         "helper",
         "fullName phone category village serviceCharge availability",
       )
-      .populate("issue", "category description status address")
+      .populate("issue", "category description status address image")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -160,11 +176,40 @@ const updateBookingStatus = async (req, res) => {
     await booking.save();
 
     const issue = await Issue.findById(booking.issue);
+
     if (issue) {
-      if (status === "accepted") issue.status = "in-progress";
-      if (status === "rejected") issue.status = "matched";
-      if (status === "completed") issue.status = "completed";
-      if (status === "cancelled") issue.status = "cancelled";
+      if (status === "accepted") {
+        issue.status = "assigned";
+        issue.assignedHelper = booking.helper;
+
+        // Reject all other pending bookings for same issue
+        await Booking.updateMany(
+          {
+            issue: booking.issue,
+            _id: { $ne: booking._id },
+            status: "pending",
+          },
+          {
+            $set: { status: "rejected" },
+          },
+        );
+      }
+
+      if (status === "rejected") {
+        issue.status = "pending";
+        issue.assignedHelper = null;
+      }
+
+      if (status === "completed") {
+        issue.status = "completed";
+        issue.assignedHelper = booking.helper;
+      }
+
+      if (status === "cancelled") {
+        issue.status = "cancelled";
+        issue.assignedHelper = null;
+      }
+
       await issue.save();
     }
 

@@ -61,7 +61,7 @@ const MyBookings = () => {
     <>
       <Navbar />
 
-      <section className="min-h-screen bg-slate-50 px-4 py-6">
+      <section className="min-h-screen bg-slate-50 px-4 py-6 pt-28">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-3xl shadow-sm p-6">
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
@@ -134,14 +134,18 @@ const MyBookings = () => {
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-slate-50 rounded-2xl p-3">
-                          <p className="text-xs text-slate-500">Preferred Date</p>
+                          <p className="text-xs text-slate-500">
+                            Preferred Date
+                          </p>
                           <p className="text-sm font-medium text-slate-800 mt-1">
                             {booking.preferredDate || "N/A"}
                           </p>
                         </div>
 
                         <div className="bg-slate-50 rounded-2xl p-3">
-                          <p className="text-xs text-slate-500">Preferred Time</p>
+                          <p className="text-xs text-slate-500">
+                            Preferred Time
+                          </p>
                           <p className="text-sm font-medium text-slate-800 mt-1">
                             {booking.preferredTime || "N/A"}
                           </p>

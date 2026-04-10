@@ -2,17 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  LogOut, 
-  Menu, 
-  X, 
-  Home, 
-  PlusCircle, 
-  ClipboardList, 
-  Users, 
-  Star, 
-  LayoutDashboard, 
-  UserCircle 
+import {
+  LogOut,
+  Menu,
+  X,
+  Home,
+  PlusCircle,
+  ClipboardList,
+  Users,
+  Star,
+  LayoutDashboard,
+  UserCircle,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -43,10 +43,10 @@ const Navbar = () => {
       { name: "My Issues", path: "/my-issues", icon: ClipboardList },
       { name: "Helpers", path: "/helpers", icon: Users },
       { name: "Rating", path: "/rating", icon: Star },
+      { name: "My Bookings", path: "/my-bookings", icon: ClipboardList },
     ],
     helper: [
       { name: "Requests", path: "/helper-requests", icon: ClipboardList },
-      { name: "Helpers", path: "/helpers", icon: Users },
       { name: "Profile", path: "/helper-profile", icon: UserCircle },
     ],
     admin: [
@@ -56,18 +56,20 @@ const Navbar = () => {
       { name: "Home", path: "/", icon: Home },
       { name: "Login", path: "/login", icon: null },
       { name: "Register", path: "/register", icon: null },
-    ]
+    ],
   };
 
-  const currentLinks = isAuthenticated 
-    ? navLinks[authUser?.role] || [] 
+  const currentLinks = isAuthenticated
+    ? navLinks[authUser?.role] || []
     : navLinks.public;
 
   return (
-    <nav 
+    <nav
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 py-3",
-        scrolled ? "bg-white/80 backdrop-blur-md shadow-lg py-2" : "bg-transparent"
+        scrolled
+          ? "bg-white/80 backdrop-blur-md shadow-lg py-2"
+          : "bg-transparent",
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -76,10 +78,17 @@ const Navbar = () => {
             whileHover={{ rotate: 10 }}
             className="bg-blue-600 p-1.5 rounded-lg shadow-lg"
           >
-            <img src="/CE_icon.png" alt="CivicEye" className="h-7 w-auto brightness-0 invert" />
+            <img
+              src="/CE_icon.png"
+              alt="CivicEye"
+              className="h-7 w-auto brightness-0 invert"
+            />
           </motion.div>
           <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-            Civic<span className="text-blue-600 group-hover:text-slate-900">Eye</span>
+            Civic
+            <span className="text-blue-600 group-hover:text-slate-900">
+              Eye
+            </span>
           </span>
         </Link>
 
@@ -91,9 +100,9 @@ const Navbar = () => {
               to={link.path}
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                location.pathname === link.path 
-                  ? "bg-blue-50 text-blue-600" 
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                location.pathname === link.path
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
               )}
             >
               {link.name}
@@ -132,7 +141,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Toggle */}
-        <button 
+        <button
           className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -156,9 +165,9 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 className={cn(
                   "px-4 py-3 rounded-xl text-base font-medium flex items-center gap-3",
-                  location.pathname === link.path 
-                    ? "bg-blue-50 text-blue-600" 
-                    : "text-slate-600 hover:bg-slate-50"
+                  location.pathname === link.path
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-slate-600 hover:bg-slate-50",
                 )}
               >
                 {link.icon && <link.icon size={20} />}

@@ -155,7 +155,7 @@ const Register = () => {
 
       login(data.token, data.user || data.helper);
       if (role === "helper") {
-        navigate("/helpers");
+        navigate("/helpers-requests");
       } else {
         navigate("/home");
       }

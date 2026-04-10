@@ -4,30 +4,48 @@ import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { getMyIssues } from "../services/issueService";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ClipboardList, 
-  MapPin, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  User, 
-  RefreshCcw, 
+import {
+  ClipboardList,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  User,
+  RefreshCcw,
   Search,
   ArrowRight,
   ImageIcon,
   Loader2,
-  Activity
+  Activity,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const statusConfig = {
-  pending: { color: "text-amber-600 bg-amber-50 border-amber-100", icon: Clock },
+  pending: {
+    color: "text-amber-600 bg-amber-50 border-amber-100",
+    icon: Clock,
+  },
   matched: { color: "text-blue-600 bg-blue-50 border-blue-100", icon: Search },
-  booked: { color: "text-purple-600 bg-purple-50 border-purple-100", icon: ClipboardList },
-  "in-progress": { color: "text-indigo-600 bg-indigo-50 border-indigo-100", icon: Activity },
-  completed: { color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: CheckCircle2 },
-  cancelled: { color: "text-red-600 bg-red-50 border-red-100", icon: AlertCircle },
-  default: { color: "text-slate-600 bg-slate-50 border-slate-100", icon: AlertCircle },
+  booked: {
+    color: "text-purple-600 bg-purple-50 border-purple-100",
+    icon: ClipboardList,
+  },
+  "in-progress": {
+    color: "text-indigo-600 bg-indigo-50 border-indigo-100",
+    icon: Activity,
+  },
+  completed: {
+    color: "text-emerald-600 bg-emerald-50 border-emerald-100",
+    icon: CheckCircle2,
+  },
+  cancelled: {
+    color: "text-red-600 bg-red-50 border-red-100",
+    icon: AlertCircle,
+  },
+  default: {
+    color: "text-slate-600 bg-slate-50 border-slate-100",
+    icon: AlertCircle,
+  },
 };
 
 const MyIssues = () => {
@@ -70,8 +88,12 @@ const MyIssues = () => {
               <ClipboardList size={14} />
               <span>History</span>
             </div>
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">My Issues</h1>
-            <p className="mt-2 text-slate-500 font-medium">Track and manage your community reports</p>
+            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+              My Issues
+            </h1>
+            <p className="mt-2 text-slate-500 font-medium">
+              Track and manage your community reports
+            </p>
           </motion.div>
 
           <motion.button
@@ -88,10 +110,12 @@ const MyIssues = () => {
         {loading && issues.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 grayscale opacity-50">
             <Loader2 size={48} className="animate-spin text-blue-600 mb-4" />
-            <p className="text-xl font-bold text-slate-500">Loading your issues...</p>
+            <p className="text-xl font-bold text-slate-500">
+              Loading your issues...
+            </p>
           </div>
         ) : issues.length === 0 ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="glass p-12 rounded-[3rem] text-center max-w-2xl mx-auto shadow-xl"
@@ -99,12 +123,14 @@ const MyIssues = () => {
             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <ClipboardList size={40} className="text-slate-400" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">No issues found</h2>
-            <p className="text-slate-500 mb-8">You haven't reported any issues yet. Your contributions help make the community better!</p>
-            <button 
-              onClick={() => navigate("/report")}
-              className="btn-primary"
-            >
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              No issues found
+            </h2>
+            <p className="text-slate-500 mb-8">
+              You haven't reported any issues yet. Your contributions help make
+              the community better!
+            </p>
+            <button onClick={() => navigate("/report")} className="btn-primary">
               Report Your First Issue
             </button>
           </motion.div>
@@ -112,6 +138,16 @@ const MyIssues = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {issues.map((issue, idx) => {
               const status = statusConfig[issue.status] || statusConfig.default;
+
+              const lockedStatuses = [
+                "booked",
+                "assigned",
+                "accepted",
+                "in-progress",
+              ];
+              const isLocked = lockedStatuses.includes(issue.status);
+              const isCompleted = issue.status === "completed";
+
               return (
                 <motion.div
                   key={issue._id}
@@ -127,14 +163,18 @@ const MyIssues = () => {
                       </h3>
                       <div className="flex items-center gap-1.5 text-slate-500 font-medium">
                         <MapPin size={14} className="text-blue-500" />
-                        <span className="text-sm truncate max-w-[200px]">{issue.address || "Area location"}</span>
+                        <span className="text-sm truncate max-w-[200px]">
+                          {issue.address || "Area location"}
+                        </span>
                       </div>
                     </div>
 
-                    <div className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider",
-                      status.color
-                    )}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider",
+                        status.color,
+                      )}
+                    >
                       <status.icon size={14} />
                       {issue.status}
                     </div>
@@ -142,7 +182,9 @@ const MyIssues = () => {
 
                   <div className="space-y-4">
                     <div className="p-4 bg-white/40 rounded-2xl border border-white/60">
-                      <p className="text-xs font-bold text-slate-400 uppercase mb-1">Description</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                        Description
+                      </p>
                       <p className="text-slate-700 text-sm leading-relaxed font-medium line-clamp-2">
                         {issue.description}
                       </p>
@@ -162,28 +204,56 @@ const MyIssues = () => {
                     )}
 
                     <div className="p-4 bg-white/40 rounded-2xl border border-white/60 flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                        <User size={20} />
-                      </div>
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Assigned Helper</p>
                         <p className="text-sm font-bold text-slate-800">
-                          {issue.assignedHelper ? issue.assignedHelper.fullName : "Not Assigned Yet"}
+                          {issue.assignedHelper && (
+                            <div className="mt-4 flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                {issue.assignedHelper.fullName?.charAt(0) ||
+                                  "H"}
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400 uppercase">
+                                  Assigned Helper
+                                </p>
+                                <p className="text-base font-bold text-slate-900">
+                                  {issue.assignedHelper.fullName}
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 flex gap-3">
-                    <button
-                      onClick={() => handleFindHelpers(issue)}
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all hover:scale-[1.02]"
-                    >
-                      Find Helpers
-                      <ArrowRight size={18} />
-                    </button>
+                  <div className="mt-6">
+                    {isLocked ? (
+                      <button
+                        disabled
+                        className="w-full rounded-2xl bg-slate-300 text-slate-600 py-4 font-semibold cursor-not-allowed"
+                      >
+                        Helper Already Assigned
+                      </button>
+                    ) : isCompleted ? (
+                      <button
+                        disabled
+                        className="w-full rounded-2xl bg-blue-100 text-blue-700 py-4 font-semibold cursor-not-allowed"
+                      >
+                        Issue Completed
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          navigate("/helpers", { state: { issue } })
+                        }
+                        className="w-full rounded-2xl bg-blue-600 text-white py-4 font-semibold"
+                      >
+                        Find Helpers
+                      </button>
+                    )}
                   </div>
-                  
+
                   {/* Background decoration */}
                   <div className="absolute -right-12 -bottom-12 w-32 h-32 bg-blue-100/30 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </motion.div>

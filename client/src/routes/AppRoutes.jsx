@@ -15,6 +15,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 import HelperRequests from "../pages/HelperRequests";
 import MyIssues from "../pages/MyIssues";
+import MyBookings from "../pages/MyBookings";
 
 const AppRoutes = () => {
   return (
@@ -60,7 +61,7 @@ const AppRoutes = () => {
       <Route
         path="/helpers"
         element={
-          <ProtectedRoute allowedRoles={["user", "helper"]}>
+          <ProtectedRoute allowedRoles={["user"]}>
             <Helpers />
           </ProtectedRoute>
         }
@@ -80,6 +81,15 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["user"]}>
             <Booking />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-bookings"
+        element={
+          <ProtectedRoute allowedRoles={["user"]}>
+            <MyBookings />
           </ProtectedRoute>
         }
       />

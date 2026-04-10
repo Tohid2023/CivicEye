@@ -28,22 +28,29 @@ const Login = () => {
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      const data = await loginAccount(formData);
-      login(data.token, data.account);
-      if (data.account.role === "helper") {
-        navigate("/helpers");
-      } else {
-        navigate("/home");
-      }
-    } catch (error) {
-      alert(error.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
+  e.preventDefault();
+
+  try {
+    setLoading(true);
+
+    const data = await loginAccount(formData);
+
+    // Save token + user
+    login(data.token, data.account);
+
+    // Role-based redirect
+    if (data.account.role === "helper") {
+      navigate("/helper-requests");
+    } else {
+      navigate("/home");
     }
-  };
+
+  } catch (error) {
+    alert(error.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="bg-mesh min-h-screen flex flex-col">
