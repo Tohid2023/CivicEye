@@ -60,7 +60,7 @@ const AppRoutes = () => {
       <Route
         path="/helpers"
         element={
-          <ProtectedRoute allowedRoles={["user"]}>
+          <ProtectedRoute allowedRoles={["user", "helper"]}>
             <Helpers />
           </ProtectedRoute>
         }

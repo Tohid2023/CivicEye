@@ -46,6 +46,7 @@ const Navbar = () => {
     ],
     helper: [
       { name: "Requests", path: "/helper-requests", icon: ClipboardList },
+      { name: "Helpers", path: "/helpers", icon: Users },
       { name: "Profile", path: "/helper-profile", icon: UserCircle },
     ],
     admin: [

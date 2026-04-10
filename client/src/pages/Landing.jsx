@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Zap, 
@@ -12,23 +12,9 @@ import {
 } from "lucide-react";
 import Navbar from "../components/common/Navbar.jsx";
 import Footer from "../components/common/Footer.jsx";
-import { useAuth } from "../context/AuthContext.jsx";
 import { cn } from "../lib/utils";
 
 const Landing = () => {
-  const { isAuthenticated, authUser } = useAuth();
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      if (authUser?.role === "helper") {
-        navigate("/helper-requests");
-      } else {
-        navigate("/home");
-      }
-    }
-  }, [isAuthenticated, authUser, navigate]);
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

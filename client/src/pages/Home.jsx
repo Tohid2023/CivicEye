@@ -12,31 +12,11 @@ import {
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import CategoryGrid from "../components/home/CategoryGrid";
-import { getMyBookings } from "../services/bookingService";
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/utils";
 
 const Home = () => {
   const { authUser } = useAuth();
-  const [activeBooking, setActiveBooking] = useState(null);
-  const [bookingLoading, setBookingLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchActiveBooking = async () => {
-      try {
-        const data = await getMyBookings();
-        // Find if there's any pending or accepted booking
-        const pendingOrAccepted = data.bookings?.find(b => b.status === 'pending' || b.status === 'accepted');
-        setActiveBooking(pendingOrAccepted || null);
-      } catch (error) {
-        console.error("Failed to fetch bookings", error);
-      } finally {
-        setBookingLoading(false);
-      }
-    };
-
-    fetchActiveBooking();
-  }, []);
 
   return (
     <div className="bg-mesh min-h-screen">
@@ -64,43 +44,23 @@ const Home = () => {
 
               <div className="grid md:grid-cols-3 gap-4">
                 {[
-                  { title: "Report Problem", path: "/report", icon: PlusCircle, color: "bg-blue-600 hover:bg-blue-700", show: true },
-                  { 
-                    title: activeBooking 
-                      ? activeBooking.status === "pending" 
-                        ? "Request Sent ⏳" 
-                        : "Request Accepted ✅" 
-                      : "Find Helpers", 
-                    path: activeBooking ? (activeBooking.status === "accepted" ? "/helper-profile" : "#") : "/helpers", 
-                    icon: Users, 
-                    color: activeBooking ? "bg-emerald-600/80 cursor-default" : "bg-slate-700 hover:bg-slate-600",
-                    state: activeBooking?.helper,
-                    show: true,
-                    disabled: activeBooking?.status === "pending"
-                  },
-                  { title: "Community Ratings", path: "/rating", icon: Star, color: "bg-slate-700 hover:bg-slate-600", show: true },
-                ].filter(a => a.show).map((action, idx) => (
+                  { title: "Report Problem", path: "/report", icon: PlusCircle, color: "bg-blue-600 hover:bg-blue-700" },
+                  { title: "Find Helpers", path: "/helpers", icon: Users, color: "bg-slate-700 hover:bg-slate-600" },
+                  { title: "Community Ratings", path: "/rating", icon: Star, color: "bg-slate-700 hover:bg-slate-600" },
+                ].map((action, idx) => (
                   <Link 
                     key={idx} 
                     to={action.path}
-                    state={action.state}
-                    onClick={(e) => action.disabled && e.preventDefault()}
                     className={cn(
                       "flex items-center justify-between p-5 rounded-2xl transition-all duration-300 group",
-                      action.color,
-                      action.disabled && "opacity-80 cursor-not-allowed"
+                      action.color
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <action.icon size={24} className="text-white" />
-                      <div className="flex flex-col">
-                        <span className="font-bold">{action.title}</span>
-                        {activeBooking && action.title.includes("Accepted") && (
-                          <span className="text-[10px] opacity-80 uppercase tracking-tighter">View {activeBooking.helper?.fullName}</span>
-                        )}
-                      </div>
+                      <span className="font-bold">{action.title}</span>
                     </div>
-                    {!action.disabled && <ArrowRight size={18} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />}
+                    <ArrowRight size={18} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                   </Link>
                 ))}
               </div>

@@ -20,31 +20,22 @@ import {
   Briefcase,
   ArrowRight,
   ShieldCheck,
-  Loader2,
-  Star,
-  IndianRupee,
-  User as UserIcon
+  Loader2
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { getMyHelperProfile } from "../services/helperService";
 
 const HelperRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState("");
-  const [helperProfile, setHelperProfile] = useState(null);
 
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const [bookingsData, profileData] = await Promise.all([
-        getHelperBookings(),
-        getMyHelperProfile()
-      ]);
-      setRequests(bookingsData.bookings || []);
-      setHelperProfile(profileData.helper || null);
+      const data = await getHelperBookings();
+      setRequests(data.bookings || []);
     } catch (error) {
-      console.error("Failed to fetch dashboard data", error);
+      alert(error.response?.data?.message || "Failed to fetch helper requests");
     } finally {
       setLoading(false);
     }
@@ -101,53 +92,6 @@ const HelperRequests = () => {
             Manage your service requests, track active bookings, and build your community reputation.
           </p>
         </header>
-
-        {helperProfile && (
-          <section className="mb-12">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass p-8 rounded-[3rem] border-white/50 flex flex-col md:flex-row items-center gap-8 shadow-xl"
-            >
-              <div className="w-24 h-24 rounded-3xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
-                <UserIcon size={48} />
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-slate-900">{helperProfile.fullName}</h2>
-                <p className="text-blue-600 font-bold text-sm uppercase tracking-wider mb-3">{helperProfile.category}</p>
-                <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-sm font-medium bg-slate-100 px-3 py-1 rounded-full">
-                    <MapPin size={14} />
-                    {helperProfile.village}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-amber-600 text-sm font-bold bg-amber-50 px-3 py-1 rounded-full">
-                    <Star size={14} fill="currentColor" />
-                    {helperProfile.averageRating || "5.0"} Rating
-                  </div>
-                  <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-bold bg-emerald-50 px-3 py-1 rounded-full">
-                    <IndianRupee size={14} />
-                    {helperProfile.serviceCharge} Base Fee
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  "px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest border",
-                  helperProfile.availability === "available" ? "bg-emerald-500 text-white" : "bg-red-50 text-red-600 border-red-100"
-                )}>
-                  {helperProfile.availability === "available" ? "Accepting Jobs" : "Busy"}
-                </div>
-              </div>
-            </motion.div>
-          </section>
-        )}
-
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Service Requests</h2>
-            <p className="text-slate-500 text-sm font-medium">Manage your incoming and active bookings</p>
-          </div>
-        </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 grayscale opacity-50">
