@@ -120,7 +120,7 @@ const ReportIssue = () => {
 
       const data = await createIssue(issueFormData);
       localStorage.setItem("selected_issue_id", data.issue._id);
-      navigate("/helpers");
+      navigate("/my-issues");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to submit issue");
     } finally {

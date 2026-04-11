@@ -25,6 +25,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { getHelperRatings } from "../services/ratingService";
 
 const categoryIcons = {
   electrician: Zap,
@@ -36,6 +37,9 @@ const categoryIcons = {
 };
 
 const HelperProfile = () => {
+  const [ratings, setRatings] = useState([]);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -43,6 +47,24 @@ const HelperProfile = () => {
 
   const [helper, setHelper] = useState(location.state || null);
   const [loading, setLoading] = useState(!location.state);
+
+  useEffect(() => {
+    const fetchRatings = async () => {
+      try {
+        if (!helper?._id) return;
+
+        setRatingsLoading(true);
+        const data = await getHelperRatings(helper._id);
+        setRatings(data.ratings || []);
+      } catch (error) {
+        console.error("Failed to fetch ratings:", error);
+      } finally {
+        setRatingsLoading(false);
+      }
+    };
+
+    fetchRatings();
+  }, [helper?._id]);
 
   useEffect(() => {
     const fetchOwnHelperProfile = async () => {
@@ -255,37 +277,60 @@ const HelperProfile = () => {
                         fill="currentColor"
                         className="text-amber-500"
                       />
-                      {helper.averageRating || "5.0"} •{" "}
-                      {helper.totalReviews || "12"} Reviews
+                      {helper.averageRating ?? "0.0"} •{" "}
+                      {helper.totalReviews ?? "0"} Reviews
                     </div>
                   </div>
-                  <div className="glass p-6 rounded-[2rem] border-white/40 shadow-sm">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                        <MessageSquare size={24} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1 mb-1">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <Star
-                              key={s}
-                              size={14}
-                              fill={s <= 5 ? "#f59e0b" : "none"}
-                              className="text-amber-500"
-                            />
-                          ))}
-                        </div>
-                        <p className="text-slate-700 font-medium italic mb-2">
-                          "Extremely professional and knowledgeable. Solved my
-                          complex wiring issue in less than an hour at a very
-                          fair price."
-                        </p>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          Community Member • 2 Days Ago
-                        </div>
-                      </div>
+                  {ratingsLoading ? (
+                    <div className="glass p-6 rounded-[2rem] border-white/40 shadow-sm text-slate-500">
+                      Loading reviews...
                     </div>
-                  </div>
+                  ) : ratings.length > 0 ? (
+                    <div className="space-y-4">
+                      {ratings.map((item) => (
+                        <div
+                          key={item._id}
+                          className="glass p-6 rounded-[2rem] border-white/40 shadow-sm"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+                              <MessageSquare size={24} />
+                            </div>
+
+                            <div className="flex-1">
+                              <div className="flex items-center gap-1 mb-1">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <Star
+                                    key={s}
+                                    size={14}
+                                    fill={s <= item.stars ? "#f59e0b" : "none"}
+                                    className="text-amber-500"
+                                  />
+                                ))}
+                              </div>
+
+                              <p className="text-slate-700 font-medium italic mb-2">
+                                {item.review
+                                  ? `"${item.review}"`
+                                  : "No review message provided."}
+                              </p>
+
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                {item.user?.fullName || "Community Member"}
+                                {item.user?.village
+                                  ? ` • ${item.user.village}`
+                                  : ""}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="glass p-6 rounded-[2rem] border-white/40 shadow-sm text-slate-500">
+                      No reviews yet.
+                    </div>
+                  )}
                 </section>
               </div>
 

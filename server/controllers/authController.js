@@ -57,10 +57,26 @@ const sendOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: "Phone/email cannot be empty" });
     }
 
-    const existing = await (role === "user" ? User.findOne({ $or: [{ phone: phone ? phone.trim() : null }, { email: email ? email.trim().toLowerCase() : null }] }) : Helper.findOne({ $or: [{ phone: phone ? phone.trim() : null }, { email: email ? email.trim().toLowerCase() : null }] }));
+    const existing =
+      role === "user"
+        ? await User.findOne({
+            $or: [
+              { phone: phone ? phone.trim() : null },
+              { email: email ? email.trim().toLowerCase() : null },
+            ],
+          })
+        : await Helper.findOne({
+            $or: [
+              { phone: phone ? phone.trim() : null },
+              { email: email ? email.trim().toLowerCase() : null },
+            ],
+          });
 
     if (existing) {
-      return res.status(400).json({ success: false, message: "Account already exists with this phone/email" });
+      return res.status(400).json({
+        success: false,
+        message: "Account already exists with this phone/email",
+      });
     }
 
     const otp = generateOtp();
@@ -68,20 +84,33 @@ const sendOtp = async (req, res) => {
     storeOtp(key, otp);
 
     if (!email) {
-      return res.status(400).json({ success: false, message: "Email is required to send OTP via email" });
+      return res.status(400).json({
+        success: false,
+        message: "Email is required to send OTP via email",
+      });
     }
 
     try {
       await sendOtpEmail({ to: email.trim().toLowerCase(), otp, role });
     } catch (mailError) {
       console.error("OTP email send failed:", mailError.message);
-      return res.status(500).json({ success: false, message: "Failed to send OTP email. Check SMTP config." });
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP email. Check SMTP config.",
+      });
     }
 
-    return res.status(200).json({ success: true, message: "OTP email sent successfully", otpSentTo: target });
+    return res.status(200).json({
+      success: true,
+      message: "OTP email sent successfully",
+      otpSentTo: target,
+    });
   } catch (error) {
     console.error("Send OTP Error:", error.message);
-    return res.status(500).json({ success: false, message: "Server error while sending OTP" });
+    return res.status(500).json({
+      success: false,
+      message: "Server error while sending OTP",
+    });
   }
 };
 
@@ -107,10 +136,16 @@ const verifyOtp = async (req, res) => {
     entry.verified = true;
     otpStore.set(key, entry);
 
-    return res.status(200).json({ success: true, message: "OTP verified successfully" });
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
   } catch (error) {
     console.error("Verify OTP Error:", error.message);
-    return res.status(500).json({ success: false, message: "Server error while verifying OTP" });
+    return res.status(500).json({
+      success: false,
+      message: "Server error while verifying OTP",
+    });
   }
 };
 
@@ -137,14 +172,27 @@ const registerUser = async (req, res) => {
     }
 
     if (!otp || !/^[0-9]{6}$/.test(otp)) {
-      return res.status(400).json({ success: false, message: "Valid 6-digit OTP is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Valid 6-digit OTP is required",
+      });
     }
 
     const otpKey = getOtpKey({ role: "user", phone, email });
     const otpEntry = otpStore.get(otpKey);
-    if (!otpEntry || !otpEntry.verified || otpEntry.otp !== otp || otpEntry.expiresAt < Date.now()) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+
+    if (
+      !otpEntry ||
+      !otpEntry.verified ||
+      otpEntry.otp !== otp ||
+      otpEntry.expiresAt < Date.now()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP",
+      });
     }
+
     consumeOtpEntry(otpKey);
 
     const cleanedPhone = phone.trim();
@@ -188,6 +236,8 @@ const registerUser = async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
+        address: user.address,
+        village: user.village,
         location: user.location,
       },
     });
@@ -227,14 +277,27 @@ const registerHelper = async (req, res) => {
     }
 
     if (!otp || !/^[0-9]{6}$/.test(otp)) {
-      return res.status(400).json({ success: false, message: "Valid 6-digit OTP is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Valid 6-digit OTP is required",
+      });
     }
 
     const otpKey = getOtpKey({ role: "helper", phone, email });
     const otpEntry = otpStore.get(otpKey);
-    if (!otpEntry || !otpEntry.verified || otpEntry.otp !== otp || otpEntry.expiresAt < Date.now()) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+
+    if (
+      !otpEntry ||
+      !otpEntry.verified ||
+      otpEntry.otp !== otp ||
+      otpEntry.expiresAt < Date.now()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP",
+      });
     }
+
     consumeOtpEntry(otpKey);
 
     const cleanedPhone = phone.trim();
@@ -281,6 +344,8 @@ const registerHelper = async (req, res) => {
         phone: helper.phone,
         email: helper.email,
         category: helper.category,
+        village: helper.village,
+        address: helper.address,
         role: helper.role,
         location: helper.location,
         serviceCharge: helper.serviceCharge,
@@ -315,17 +380,13 @@ const loginAccount = async (req, res) => {
     let account = null;
 
     if (role === "user") {
-      if (loginValue.includes("@")) {
-        account = await User.findOne({ email: normalizedEmail });
-      } else {
-        account = await User.findOne({ phone: loginValue });
-      }
+      account = loginValue.includes("@")
+        ? await User.findOne({ email: normalizedEmail })
+        : await User.findOne({ phone: loginValue });
     } else if (role === "helper") {
-      if (loginValue.includes("@")) {
-        account = await Helper.findOne({ email: normalizedEmail });
-      } else {
-        account = await Helper.findOne({ phone: loginValue });
-      }
+      account = loginValue.includes("@")
+        ? await Helper.findOne({ email: normalizedEmail })
+        : await Helper.findOne({ phone: loginValue });
     } else {
       return res.status(400).json({
         success: false,
@@ -362,6 +423,8 @@ const loginAccount = async (req, res) => {
         email: account.email,
         role: account.role,
         category: account.category || null,
+        village: account.village || "",
+        address: account.address || "",
         location: account.location || null,
         serviceCharge: account.serviceCharge || 0,
         averageRating: account.averageRating || 0,

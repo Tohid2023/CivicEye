@@ -9,3 +9,8 @@ export const getHelperRatings = async (helperId) => {
   const response = await api.get(`/ratings/helper/${helperId}`);
   return response.data;
 };
+
+export const getMyRatings = async () => {
+  const response = await api.get("/ratings/my-ratings");
+  return response.data;
+};
