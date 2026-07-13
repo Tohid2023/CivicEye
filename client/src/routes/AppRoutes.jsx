@@ -16,6 +16,7 @@ import PublicRoute from "./PublicRoute";
 import HelperRequests from "../pages/HelperRequests";
 import MyIssues from "../pages/MyIssues";
 import MyBookings from "../pages/MyBookings";
+import LiveTracking from "../pages/LiveTracking";
 
 const AppRoutes = () => {
   return (
@@ -90,6 +91,15 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["user"]}>
             <MyBookings />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/live-tracking/:bookingId"
+        element={
+          <ProtectedRoute allowedRoles={["user", "helper"]}>
+            <LiveTracking />
           </ProtectedRoute>
         }
       />

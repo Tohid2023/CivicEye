@@ -339,11 +339,18 @@ const MyBookings = () => {
                                   Rate Now
                                 </button>
                               )
+                            ) : booking.status === "accepted" || booking.status === "in-progress" ? (
+                              <button
+                                onClick={() => navigate(`/live-tracking/${booking._id}`)}
+                                className="col-span-1 rounded-2xl bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
+                              >
+                                Track Service
+                              </button>
                             ) : (
                               <div className="col-span-1 flex items-center justify-center rounded-2xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500">
-                                {booking.status === "accepted"
-                                  ? "Service Active"
-                                  : "Waiting"}
+                                {booking.status === "pending"
+                                  ? "Waiting"
+                                  : booking.status}
                               </div>
                             )}
 
