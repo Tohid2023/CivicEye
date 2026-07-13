@@ -37,6 +37,15 @@ const sendMail = async ({ to, subject, text, html }) => {
   };
 
   const result = await transporter.sendMail(mailData);
+  
+  // Log preview URL for testing with Ethereal SMTP
+  if (process.env.SMTP_HOST && process.env.SMTP_HOST.includes("ethereal")) {
+    console.log(`\n==========================================`);
+    console.log(`📩 [Ethereal Mail Sent]`);
+    console.log(`Preview URL: ${nodemailer.getTestMessageUrl(result)}`);
+    console.log(`==========================================\n`);
+  }
+  
   return result;
 };
 

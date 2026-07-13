@@ -415,7 +415,7 @@ const Register = () => {
                         maxLength={6}
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value)}
-                        className="w-full bg-white border-2 border-blue-500 rounded-2xl px-6 py-4 text-center text-lg font-bold tracking-[0.5em] focus:outline-none"
+                        className="w-full bg-white border-2 border-blue-500 rounded-2xl px-2 py-4 text-center text-lg font-bold tracking-[0.5em] placeholder:tracking-normal placeholder:text-sm focus:outline-none"
                       />
                     </motion.div>
                   )}
