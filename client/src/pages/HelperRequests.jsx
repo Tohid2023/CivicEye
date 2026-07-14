@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import {
@@ -25,10 +26,12 @@ import {
   Filter,
   Sparkles,
   Ban,
+  Navigation,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const HelperRequests = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState("");
@@ -271,41 +274,45 @@ const HelperRequests = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => handleStatusUpdate(booking._id, "accepted")}
-                    disabled={updatingId === booking._id || booking.status !== "pending"}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600 hover:text-white transition-all disabled:opacity-30 disabled:grayscale"
-                  >
-                    {updatingId === booking._id ? (
-                      <Loader2 size={18} className="animate-spin" />
-                    ) : (
-                      <CheckCircle2 size={18} />
-                    )}
-                    <span className="text-[10px] font-bold uppercase mt-1">
-                      Accept
-                    </span>
-                  </button>
+                <div className={cn("mt-6 grid gap-3", booking.status === "accepted" ? "grid-cols-2" : "grid-cols-3")}>
+                  {booking.status !== "accepted" && (
+                    <button
+                      onClick={() => handleStatusUpdate(booking._id, "accepted")}
+                      disabled={updatingId === booking._id || booking.status !== "pending"}
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600 hover:text-white transition-all disabled:opacity-30 disabled:grayscale cursor-pointer"
+                    >
+                      {updatingId === booking._id ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <CheckCircle2 size={18} />
+                      )}
+                      <span className="text-[10px] font-bold uppercase mt-1">
+                        Accept
+                      </span>
+                    </button>
+                  )}
 
-                  <button
-                    onClick={() => handleStatusUpdate(booking._id, "rejected")}
-                    disabled={updatingId === booking._id || booking.status !== "pending"}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600 hover:text-white transition-all disabled:opacity-30 disabled:grayscale"
-                  >
-                    {updatingId === booking._id ? (
-                      <Loader2 size={18} className="animate-spin" />
-                    ) : (
-                      <XCircle size={18} />
-                    )}
-                    <span className="text-[10px] font-bold uppercase mt-1">
-                      Reject
-                    </span>
-                  </button>
+                  {booking.status !== "accepted" && (
+                    <button
+                      onClick={() => handleStatusUpdate(booking._id, "rejected")}
+                      disabled={updatingId === booking._id || booking.status !== "pending"}
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600 hover:text-white transition-all disabled:opacity-30 disabled:grayscale cursor-pointer"
+                    >
+                      {updatingId === booking._id ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <XCircle size={18} />
+                      )}
+                      <span className="text-[10px] font-bold uppercase mt-1">
+                        Reject
+                      </span>
+                    </button>
+                  )}
 
                   <button
                     onClick={() => handleStatusUpdate(booking._id, "completed")}
                     disabled={updatingId === booking._id || booking.status !== "accepted"}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30 disabled:grayscale"
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30 disabled:grayscale cursor-pointer"
                   >
                     {updatingId === booking._id ? (
                       <Loader2 size={18} className="animate-spin" />
@@ -316,6 +323,18 @@ const HelperRequests = () => {
                       Done
                     </span>
                   </button>
+
+                  {booking.status === "accepted" && (
+                    <button
+                      onClick={() => navigate(`/live-tracking/${booking._id}`)}
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+                    >
+                      <Navigation size={18} className="animate-pulse" />
+                      <span className="text-[10px] font-bold uppercase mt-1">
+                        Track & Chat
+                      </span>
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}

@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { getBookingById } from "../services/bookingService";
+import { useAuth } from "../context/AuthContext";
+import ChatWindow from "../components/common/ChatWindow";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -16,7 +18,8 @@ import {
   AlertTriangle,
   ArrowLeft,
   RefreshCw,
-  Info
+  Info,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -44,11 +47,13 @@ const setCachedCoordinates = (address, coords) => {
 const LiveTracking = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
-
+  const { authUser } = useAuth();
+ 
   // Booking details state
   const [booking, setBooking] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(true);
   const [bookingError, setBookingError] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Leaflet CDN dynamic loading state
   const [leafletReady, setLeafletReady] = useState(false);
@@ -540,88 +545,142 @@ const LiveTracking = () => {
             </div>
 
             {/* Sidebar Details Column */}
-            <div className="lg:col-span-4 space-y-6">
-              {/* Dispatch Info Card */}
-              <div className="glass p-6 rounded-[2.5rem] border border-white/60 bg-white/70 backdrop-blur-xl shadow-xl space-y-6">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 border border-blue-200 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-blue-700">
-                    Active Dispatch
-                  </span>
-                  <h2 className="text-2xl font-black text-slate-900 mt-2 capitalize">
-                    {booking?.issue?.category || "Service Issue"}
-                  </h2>
-                  <p className="text-slate-500 text-sm font-medium mt-1">
-                    Booking Reference: {booking?._id}
-                  </p>
-                </div>
-
-                <div className="border-t border-slate-200/50 pt-4 space-y-4 text-sm font-semibold">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
-                      <Calendar size={18} />
-                    </div>
+            <div className="lg:col-span-4 flex flex-col">
+              {isChatOpen ? (
+                <ChatWindow bookingId={bookingId} onClose={() => setIsChatOpen(false)} />
+              ) : (
+                <div className="space-y-6 w-full">
+                  {/* Dispatch Info Card */}
+                  <div className="glass p-6 rounded-[2.5rem] border border-white/60 bg-white/70 backdrop-blur-xl shadow-xl space-y-6">
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Preferred Date</p>
-                      <p className="text-slate-800">{booking?.preferredDate || "Not Specified"}</p>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 border border-blue-200 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-blue-700">
+                        Active Dispatch
+                      </span>
+                      <h2 className="text-2xl font-black text-slate-900 mt-2 capitalize">
+                        {booking?.issue?.category || "Service Issue"}
+                      </h2>
+                      <p className="text-slate-500 text-sm font-medium mt-1">
+                        Booking Reference: {booking?._id}
+                      </p>
+                    </div>
+
+                    <div className="border-t border-slate-200/50 pt-4 space-y-4 text-sm font-semibold">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
+                          <Calendar size={18} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Preferred Date</p>
+                          <p className="text-slate-800">{booking?.preferredDate || "Not Specified"}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
+                          <Clock size={18} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Arrival Time</p>
+                          <p className="text-slate-800">{booking?.preferredTime || "Not Specified"}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+                          <MapPin size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Service Destination</p>
+                          <p className="text-slate-800 break-words">{booking?.issue?.address || "No address provided"}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
-                      <Clock size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Arrival Time</p>
-                      <p className="text-slate-800">{booking?.preferredTime || "Not Specified"}</p>
-                    </div>
-                  </div>
+                  {/* Profile Info Card (Helper or Citizen depending on role) */}
+                  <div className="glass p-6 rounded-[2.5rem] border border-white/60 bg-white/70 backdrop-blur-xl shadow-xl space-y-5">
+                    {authUser?.role === "helper" ? (
+                      <>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                          Citizen Contact Details
+                        </h3>
 
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
-                      <MapPin size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Service Destination</p>
-                      <p className="text-slate-800 break-words">{booking?.issue?.address || "No address provided"}</p>
-                    </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-100">
+                            <User size={26} />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-bold text-slate-900">
+                              {booking?.user?.fullName || "Community Member"}
+                            </h4>
+                            <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mt-0.5">
+                              Citizen / Reporter
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 pt-3 border-t border-slate-200/50">
+                          <a
+                            href={`tel:${booking?.user?.phone}`}
+                            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-all"
+                          >
+                            <Phone size={16} />
+                            Call Citizen
+                          </a>
+                          <button
+                            onClick={() => setIsChatOpen(true)}
+                            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
+                          >
+                            <MessageSquare size={16} />
+                            Chat with Citizen
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                          Assigned Helper Details
+                        </h3>
+
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-100">
+                            <User size={26} />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-bold text-slate-900">
+                              {booking?.helper?.fullName || "Professional Specialist"}
+                            </h4>
+                            <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mt-0.5">
+                              {booking?.helper?.category || "Specialist"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 pt-3 border-t border-slate-200/50">
+                          <a
+                            href={`tel:${booking?.helper?.phone}`}
+                            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-all"
+                          >
+                            <Phone size={16} />
+                            Call Helper
+                          </a>
+                          <button
+                            onClick={() => setIsChatOpen(true)}
+                            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer"
+                          >
+                            <MessageSquare size={16} />
+                            Chat with Helper
+                          </button>
+                          <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-600">
+                            <ShieldCheck size={14} fill="currentColor" className="text-white" />
+                            Verified Provider Managed Dispatch
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
-              </div>
-
-              {/* Helper Profile Info Card */}
-              <div className="glass p-6 rounded-[2.5rem] border border-white/60 bg-white/70 backdrop-blur-xl shadow-xl space-y-5">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Assigned Helper Details
-                </h3>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-100">
-                    <User size={26} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-slate-900">
-                      {booking?.helper?.fullName || "Professional Specialist"}
-                    </h4>
-                    <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mt-0.5">
-                      {booking?.helper?.category || "Specialist"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-3 border-t border-slate-200/50">
-                  <a
-                    href={`tel:${booking?.helper?.phone}`}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-all"
-                  >
-                    <Phone size={16} />
-                    Call Helper
-                  </a>
-                  <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-600">
-                    <ShieldCheck size={14} fill="currentColor" className="text-white" />
-                    Verified Provider Managed Dispatch
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}

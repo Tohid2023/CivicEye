@@ -1,6 +1,7 @@
 const Booking = require("../models/Booking");
 const Issue = require("../models/Issue");
 const Helper = require("../models/Helper");
+const Notification = require("../models/Notification");
 
 // Create booking
 const createBooking = async (req, res) => {
@@ -73,6 +74,28 @@ const createBooking = async (req, res) => {
     }
 
     await issue.save();
+
+    // Create notification for Helper
+    try {
+      const helperNotification = await Notification.create({
+        recipient: helperId,
+        recipientModel: "Helper",
+        sender: req.user._id,
+        senderModel: "User",
+        booking: booking._id,
+        type: "booking",
+        title: "New Booking Request",
+        message: `You have received a new booking request for "${issue.category}" at "${address}".`,
+        isRead: false,
+      });
+
+      const io = req.app.get("io");
+      if (io) {
+        io.to(helperId.toString()).emit("notification", helperNotification);
+      }
+    } catch (notifError) {
+      console.error("Failed to create booking creation notification:", notifError.message);
+    }
 
     return res.status(201).json({
       success: true,
@@ -211,6 +234,49 @@ const updateBookingStatus = async (req, res) => {
       }
 
       await issue.save();
+    }
+
+    // Create notification for User
+    try {
+      let notifTitle = "";
+      let notifMessage = "";
+      let notifType = "booking";
+
+      if (status === "accepted") {
+        notifTitle = "Booking Accepted";
+        notifMessage = `Your booking for "${issue ? issue.category : "service"}" has been accepted by ${req.user.fullName}.`;
+      } else if (status === "rejected") {
+        notifTitle = "Booking Rejected";
+        notifMessage = `Your booking for "${issue ? issue.category : "service"}" has been rejected.`;
+      } else if (status === "completed") {
+        notifTitle = "Service Completed";
+        notifMessage = `Your service booking for "${issue ? issue.category : "service"}" has been marked as completed. Please rate the professional.`;
+        notifType = "completed";
+      } else if (status === "cancelled") {
+        notifTitle = "Booking Cancelled";
+        notifMessage = `Your booking for "${issue ? issue.category : "service"}" has been cancelled.`;
+      }
+
+      if (notifTitle) {
+        const citizenNotification = await Notification.create({
+          recipient: booking.user,
+          recipientModel: "User",
+          sender: req.user._id,
+          senderModel: "Helper",
+          booking: booking._id,
+          type: notifType,
+          title: notifTitle,
+          message: notifMessage,
+          isRead: false,
+        });
+
+        const io = req.app.get("io");
+        if (io) {
+          io.to(booking.user.toString()).emit("notification", citizenNotification);
+        }
+      }
+    } catch (notifError) {
+      console.error("Failed to create booking status update notification:", notifError.message);
     }
 
     return res.status(200).json({

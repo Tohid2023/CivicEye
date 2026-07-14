@@ -11,6 +11,7 @@ const helperRoutes = require("./routes/helperRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const ratingRoutes = require("./routes/ratingRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 
@@ -33,5 +34,6 @@ app.use("/api/helpers", helperRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 module.exports = app;

@@ -4,6 +4,8 @@ const connectDB = require("./config/db");
 const http = require("http");
 const socketIo = require("socket.io");
 const Message = require("./models/Message");
+const Booking = require("./models/Booking");
+const Notification = require("./models/Notification");
 
 dotenv.config();
 
@@ -22,8 +24,83 @@ const io = socketIo(server, {
   }
 });
 
+// Expose io to routes/controllers
+app.set("io", io);
+
+// Helper function to handle chat notifications
+const handleChatNotification = async (newMessage, data) => {
+  try {
+    const booking = await Booking.findById(newMessage.booking)
+      .populate("user")
+      .populate("helper");
+
+    if (!booking) {
+      console.warn(`[Socket] Booking not found for notification: ${newMessage.booking}`);
+      return;
+    }
+
+    let recipient = null;
+    let recipientModel = "";
+    let senderModel = "";
+
+    // Determine recipient and sender models based on senderId
+    if (newMessage.senderId) {
+      if (booking.user._id.toString() === newMessage.senderId.toString()) {
+        recipient = booking.helper._id;
+        recipientModel = "Helper";
+        senderModel = "User";
+      } else if (booking.helper._id.toString() === newMessage.senderId.toString()) {
+        recipient = booking.user._id;
+        recipientModel = "User";
+        senderModel = "Helper";
+      }
+    } else {
+      // Fallback role checking
+      if (data.sender === "user" || data.sender === "citizen") {
+        recipient = booking.helper._id;
+        recipientModel = "Helper";
+        senderModel = "User";
+      } else {
+        recipient = booking.user._id;
+        recipientModel = "User";
+        senderModel = "Helper";
+      }
+    }
+
+    if (recipient) {
+      const senderName = senderModel === "User" ? booking.user.fullName : booking.helper.fullName;
+      
+      const notification = await Notification.create({
+        recipient,
+        recipientModel,
+        sender: newMessage.senderId || null,
+        senderModel: senderModel || null,
+        booking: booking._id,
+        type: "chat",
+        title: "New Message",
+        message: `New message from ${senderName}: "${newMessage.text}"`,
+        isRead: false,
+      });
+
+      // Emit real-time notification to recipient's room
+      io.to(recipient.toString()).emit("notification", notification);
+      console.info(`[Socket] Chat notification sent to ${recipientModel} ${recipient}`);
+    }
+  } catch (err) {
+    console.error(`[Socket] Error generating chat notification: ${err.message}`);
+  }
+};
+
 io.on("connection", (socket) => {
   console.info(`[Socket] Client connected: ${socket.id}`);
+
+  // Join User room for notifications
+  socket.on("join_user", (userId) => {
+    if (userId) {
+      socket.join(userId.toString());
+      console.info(`[Socket] Client ${socket.id} joined personal room for user: ${userId}`);
+    }
+  });
 
   // Join Room event
   socket.on("join_room", async (bookingId) => {
@@ -64,13 +141,11 @@ io.on("connection", (socket) => {
   // Message Handler event
   socket.on("send_message", async (data) => {
     try {
-      // The schema expects "booking", but the handler might receive "bookingId" or "booking"
       const bookingRef = data.booking || data.bookingId;
       if (!bookingRef) {
         throw new Error("Validation failed: booking or bookingId is required");
       }
 
-      // Map incoming fields safely to schema fields
       const messageObj = {
         booking: bookingRef,
         sender: data.sender,
@@ -78,7 +153,6 @@ io.on("connection", (socket) => {
         text: data.text || data.message || data.content,
       };
 
-      // Create message inside try/catch block
       const newMessage = new Message(messageObj);
       await newMessage.save();
 
@@ -86,11 +160,11 @@ io.on("connection", (socket) => {
 
       // Emit instantly to both sender and receiver in the room
       io.to(bookingRef.toString()).emit("receive_message", newMessage);
-      
-      // Also emit to alternative event names just in case
       io.to(bookingRef.toString()).emit("message", newMessage);
+
+      // Create notification and emit to recipient
+      await handleChatNotification(newMessage, data);
     } catch (err) {
-      // Return meaningful error logs if validation fails
       console.error(`[Socket] Message handler failed: ${err.message}`);
       if (err.name === "ValidationError") {
         console.error(`[Socket] Mongoose ValidationError details:`, err.errors);
@@ -121,6 +195,9 @@ io.on("connection", (socket) => {
 
       io.to(bookingRef.toString()).emit("receive_message", newMessage);
       io.to(bookingRef.toString()).emit("message", newMessage);
+
+      // Create notification and emit to recipient
+      await handleChatNotification(newMessage, data);
     } catch (err) {
       console.error(`[Socket] sendMessage handler failed: ${err.message}`);
       if (err.name === "ValidationError") {
